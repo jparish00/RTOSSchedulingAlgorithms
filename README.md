@@ -8,4 +8,4 @@ This project is intended to demonstrate the functionality of common scheduling a
 
 2. Download the repository and run the command 'pip install -r requirements.txt', to install all dependencies
 
-3. run main.py
+3. Run main.py
