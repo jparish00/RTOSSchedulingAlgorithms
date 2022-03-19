@@ -1,4 +1,8 @@
-General instructions:
+# ENGR 467 RTOS Scheduling Algorithms
+
+This project is intended to demonstrate the functionality of common scheduling algorithms.
+
+# Installation
 
 1. Make sure Python 3.6 or newer is installed on your machine
 
