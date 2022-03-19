@@ -1,0 +1,6 @@
+PySide6
+altair
+altair_viewer
+numpy
+pandas
+datetime
