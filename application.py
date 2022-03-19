@@ -19,9 +19,15 @@ class MyWidget(QtWidgets.QWidget):
         # We can use this form to store the tasks in application
         self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
 
-        # Toolbar
+        # Menubar
         menubar = QtWidgets.QMenuBar(self)
-        menubar.addMenu("File")
+        fileMenu = QtWidgets.QMenu("&File", self)
+        menubar.addMenu(fileMenu)
+        openAction = QtGui.QAction("Open...", self)
+        saveAsAction = QtGui.QAction("Save As...", self)
+        saveAction = QtGui.QAction("Save...", self)
+        fileMenu.addActions([openAction, saveAsAction, saveAction])
+
         mainWindow.setMenuWidget(menubar)
 
         # Generate individual layouts/widgets
@@ -205,6 +211,15 @@ class MyWidget(QtWidgets.QWidget):
             print("Nothing here yet...")
 
         # Generate plot
+
+    """--------------MISC--------------"""
+
+    def openFile(self):
+        filePath = QtWidgets.QFileDialog.getOpenFileName(self, "Open a file", '', 'All Files (*.*)')
+        print(filePath)
+
+        return filePath
+        
 
 
         
