@@ -19,16 +19,8 @@ class MyWidget(QtWidgets.QWidget):
         # We can use this form to store the tasks in application
         self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
 
-        # Menubar
-        menubar = QtWidgets.QMenuBar(self)
-        fileMenu = QtWidgets.QMenu("&File", self)
-        menubar.addMenu(fileMenu)
-        openAction = QtGui.QAction("Open...", self)
-        saveAsAction = QtGui.QAction("Save As...", self)
-        saveAction = QtGui.QAction("Save...", self)
-        fileMenu.addActions([openAction, saveAsAction, saveAction])
-
-        mainWindow.setMenuWidget(menubar)
+        self.menubar = self.createMenuBar()
+        mainWindow.setMenuWidget(self.menubar)
 
         # Generate individual layouts/widgets
         optionsGroupBox = self.createOptionsBox()
@@ -45,10 +37,23 @@ class MyWidget(QtWidgets.QWidget):
 
         # Final widget layout
         mainLayoutV = QtWidgets.QVBoxLayout(self)
-        mainLayoutV.addWidget(menubar)
+        mainLayoutV.addWidget(self.menubar)
         mainLayoutV.addLayout(mainLayout)
 
     """--------------UI FUNCTIONS--------------"""
+    def createMenuBar(self):
+        menubar = QtWidgets.QMenuBar(self)
+        fileMenu = QtWidgets.QMenu("&File", self)
+        menubar.addMenu(fileMenu)
+        openAction = QtGui.QAction("Open", self)
+
+        saveAsAction = QtGui.QAction("Save As", self)
+        saveAction = QtGui.QAction("Save", self)
+        fileMenu.addActions([openAction, saveAsAction, saveAction])
+        openAction.triggered.connect(self.openFileExplorer)
+
+        return menubar
+
     def createOptionsBox(self):
         result = QtWidgets.QGroupBox("Options")
         initWidget(result, "options_groupbox")
@@ -140,6 +145,14 @@ class MyWidget(QtWidgets.QWidget):
         return result
 
     """--------------SLOTS--------------"""
+
+    @QtCore.Slot()
+    def openFileExplorer(self):
+        self.filePath = self.openFile()
+
+        print("Add open functionality here!")
+
+
     @QtCore.Slot()
     def randomClicked(self):
         # Refill table
