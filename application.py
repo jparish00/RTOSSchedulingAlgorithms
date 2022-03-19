@@ -37,6 +37,7 @@ class MyWidget(QtWidgets.QWidget):
         mainLayout.addWidget(self.textBox, 0, 1)
         mainLayout.addWidget(generateGroup, 1, 1)
 
+        # Final widget layout
         mainLayoutV = QtWidgets.QVBoxLayout(self)
         mainLayoutV.addWidget(menubar)
         mainLayoutV.addLayout(mainLayout)
