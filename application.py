@@ -1,9 +1,12 @@
 import sys
+import os
 import random
 import numpy as np
+import pandas as pd
 from PySide6 import QtCore, QtWidgets, QtGui
 
 import algorithms
+import taskformats as tf
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -16,8 +19,11 @@ class MyWidget(QtWidgets.QWidget):
 
         self.setWindowTitle("RTOS Scheduling Algorithm Playground")
 
-        # We can use this form to store the tasks in application
+        self.filePath = ""
+
+        # Task data, in two forms as too support algorithm with different inputs
         self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
+        self.tasks = [tf.Task(1,50,12), tf.Task(2, 40, 10), tf.Task(3, 30, 10)]
 
         self.menubar = self.createMenuBar()
         mainWindow.setMenuWidget(self.menubar)
@@ -51,6 +57,8 @@ class MyWidget(QtWidgets.QWidget):
         saveAction = QtGui.QAction("Save", self)
         fileMenu.addActions([openAction, saveAsAction, saveAction])
         openAction.triggered.connect(self.openFileExplorer)
+        saveAsAction.triggered.connect(self.saveAsFileExplorer)
+        saveAction.triggered.connect(self.saveFileSlot)
 
         return menubar
 
@@ -119,6 +127,8 @@ class MyWidget(QtWidgets.QWidget):
             result.setItem(i, 2, QtWidgets.QTableWidgetItem(str(key[1])))
             i += 1
 
+        result.itemChanged.connect(self.tableEdited)
+
         return result
 
     def createTextBox(self):
@@ -150,8 +160,98 @@ class MyWidget(QtWidgets.QWidget):
     def openFileExplorer(self):
         self.filePath = self.openFile()
 
-        print("Add open functionality here!")
+        self.textBox.clear()
 
+        # Load file data from external file
+        if (self.filePath[-5:] == ".xlsx"):
+            data = pd.read_excel(self.filePath)
+        elif(self.filePath[-4:] == ".csv"):
+            data = pd.read_csv(self.filePath)
+        elif(self.filePath[-4:] == ".txt"):
+            data = pd.read_csv(self.filePath, sep = "\t")
+        else:
+            self.textBox.insertHtml("<p><strong>File type not supported!</strong></p><p>Supported file types: .xlsx .csv .txt<p>")
+            self.filePath = ""
+            return
+
+        self.tasks.clear()
+        self.defaulttask.clear()
+        self.taskTable.setRowCount(len(data))
+        self.taskSpinBox.setValue(len(data))
+        # Sort into class list and dict
+        for i in range(len(data)):
+            self.tasks.append(tf.Task(i + 1, data.iloc[i,1], data.iloc[i,2]))
+            self.defaulttask[(data.iloc[i, 1], data.iloc[i, 2])] = 'T' + str(i + 1)
+            self.taskTable.setItem(i, 0, QtWidgets.QTableWidgetItem("T" + str(i + 1)))
+            self.taskTable.setItem(i, 1, QtWidgets.QTableWidgetItem(str(data.iloc[i, 1])))
+            self.taskTable.setItem(i, 2, QtWidgets.QTableWidgetItem(str(data.iloc[i, 2])))
+
+        self.textBox.insertHtml("<p>File loaded successfully!</p>")
+
+        # Update Window Title
+        self.updateWindowTitle()
+
+    @QtCore.Slot()
+    def saveAsFileExplorer(self):
+
+        self.textBox.clear()
+
+        # Save data as a dataframe
+        data = pd.DataFrame()
+        # For now, load from task class
+        for i in range(len(self.tasks)):
+            data.loc[i, 0] = self.tasks[i].name
+            data.loc[i, 1] = self.tasks[i].period
+            data.loc[i, 2] = self.tasks[i].exec_t
+        
+        data.columns = ["Task", "Period", "Execution"]
+
+        self.filePath = self.saveFile()
+
+        if (self.filePath[-5:] == ".xlsx"):
+            data.to_excel(self.filePath, index = False)
+        elif (self.filePath[-4:] == ".csv"):
+            data.to_csv(self.filePath, index = False)
+        elif (self.filePath[-4:] == ".txt"):
+            data.to_csv(self.filePath, "\t", index = False)
+        else:
+            self.textBox.insertHtml("<p><strong>File type is not supported, file save failed!</strong></p><p>Supported file types: .xlsx .csv .txt<p>")
+            self.filePath = ""
+            return
+        
+        self.textBox.insertHtml("</p>File saved successfully!</p>")
+
+        self.updateWindowTitle()
+
+    @QtCore.Slot()
+    def saveFileSlot(self):
+
+        self.textBox.clear()
+
+        if (self.filePath != ""):
+            # TODO: Abstract this from both functions
+            data = pd.DataFrame()
+
+            print(self.filePath)
+
+            for i in range(len(self.tasks)):
+                data.loc[i, 0] = self.tasks[i].name
+                data.loc[i, 1] = self.tasks[i].period
+                data.loc[i, 2] = self.tasks[i].exec_t
+        
+            data.columns = ["Task", "Period", "Execution"]
+
+            if (self.filePath[-5:] == ".xlsx"):
+                data.to_excel(self.filePath, index = False)
+            elif (self.filePath[-4:] == ".csv"):
+                data.to_csv(self.filePath, index = False)
+            elif (self.filePath[-4:] == ".txt"):
+                data.to_csv(self.filePath, "\t", index = False)
+        else:
+            self.saveAsFileExplorer()
+            return
+        
+        self.textBox.insertHtml("</p>File save successfully!</p>")
 
     @QtCore.Slot()
     def randomClicked(self):
@@ -162,6 +262,16 @@ class MyWidget(QtWidgets.QWidget):
             while(int(self.taskTable.item(i, 2).text()) > int(self.taskTable.item(i, 1).text()) or int(self.taskTable.item(i, 2).text()) == 0):
                 self.taskTable.setItem(i, 2, QtWidgets.QTableWidgetItem(str(np.random.randint(0, 25))))
         
+    @QtCore.Slot()
+    def tableEdited(self):
+        #Find the item that was changed
+        # TODO: send the specific row and column so we don't have to update the entire list of tasks
+        self.defaulttask.clear()
+        for i in range(self.taskTable.rowCount()):
+            self.tasks[i].period = int(self.taskTable.item(i, 1).text())
+            self.tasks[i].exec_t = int(self.taskTable.item(i, 2).text())
+            self.defaulttask[(int(self.taskTable.item(i, 1).text()), int(self.taskTable.item(i, 2).text()))] = "T" + str(i + 1)
+
     @QtCore.Slot()
     def freqForceChecked(self):
         print("[INFO]: frequency checkbox state changed!")
@@ -183,9 +293,18 @@ class MyWidget(QtWidgets.QWidget):
                 self.taskTable.setItem(rowNum - 1, 0, QtWidgets.QTableWidgetItem("T" + str(rowNum)))
                 self.taskTable.setItem(rowNum - 1, 1, QtWidgets.QTableWidgetItem(str(10)))
                 self.taskTable.setItem(rowNum - 1, 2, QtWidgets.QTableWidgetItem(str(5)))
+                # Add task data to lists
+                self.tasks.append(tf.Task(rowNum, 10, 5))
+                self.defaulttask[(10, 5)] = "T" + str(rowNum)
         else:
             r = self.taskTable.rowCount() - self.taskSpinBox.value()
             self.taskTable.setRowCount(self.taskTable.rowCount() - r)
+            for i in range (r):
+                self.tasks.pop()
+                # I truly despise working with dicts, lists are supreme
+                for key, value in dict(self.defaulttask).items():
+                    if value == "T" + str(self.taskTable.rowCount() + r - i):
+                        del self.defaulttask[key]
 
     @QtCore.Slot()
     def algorithmInfo(self):
@@ -218,7 +337,7 @@ class MyWidget(QtWidgets.QWidget):
             else:
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
 
-            self.textBox.insertHtml(text)
+        self.textBox.insertHtml(text)
         
         if self.algorithmComboBox.currentText() == "RM":
             print("Nothing here yet...")
@@ -227,12 +346,22 @@ class MyWidget(QtWidgets.QWidget):
 
     """--------------MISC--------------"""
 
+    def updateTasks(self):
+        print("Yay!")
+
+
     def openFile(self):
         filePath = QtWidgets.QFileDialog.getOpenFileName(self, "Open a file", '', 'All Files (*.*)')
-        print(filePath)
+        return filePath[0]
 
-        return filePath
+    def saveFile(self):
+        filePath = QtWidgets.QFileDialog.getSaveFileName(self, "Save file as", '', 'All Files (*.*)')
+        return filePath[0]
         
+    def updateWindowTitle(self):
+        if (self.filePath != ""):
+            head, tail = os.path.split(self.filePath)
+            self.setWindowTitle(" RTOS Scheduling Algorithm Playground - " + tail)
 
 
         
