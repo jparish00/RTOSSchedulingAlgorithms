@@ -47,14 +47,16 @@ class MyWidget(QtWidgets.QWidget):
         mainLayoutV.addLayout(mainLayout)
 
     """--------------UI FUNCTIONS--------------"""
+    
     def createMenuBar(self):
         menubar = QtWidgets.QMenuBar(self)
         fileMenu = QtWidgets.QMenu("&File", self)
         menubar.addMenu(fileMenu)
-        openAction = QtGui.QAction("Open", self)
 
+        openAction = QtGui.QAction("Open", self)
         saveAsAction = QtGui.QAction("Save As", self)
         saveAction = QtGui.QAction("Save", self)
+
         fileMenu.addActions([openAction, saveAsAction, saveAction])
         openAction.triggered.connect(self.openFileExplorer)
         saveAsAction.triggered.connect(self.saveAsFileExplorer)
@@ -115,6 +117,7 @@ class MyWidget(QtWidgets.QWidget):
         result = QtWidgets.QTableWidget()
         initWidget(result, "taskTable")
 
+        # For default tasks
         result.setRowCount(3)
         result.setColumnCount(3)
         result.setHorizontalHeaderLabels(["Task", "Period", "Execution"])
@@ -263,14 +266,18 @@ class MyWidget(QtWidgets.QWidget):
                 self.taskTable.setItem(i, 2, QtWidgets.QTableWidgetItem(str(np.random.randint(0, 25))))
         
     @QtCore.Slot()
-    def tableEdited(self):
+    def tableEdited(self, item):
         #Find the item that was changed
-        # TODO: send the specific row and column so we don't have to update the entire list of tasks
         self.defaulttask.clear()
         for i in range(self.taskTable.rowCount()):
-            self.tasks[i].period = int(self.taskTable.item(i, 1).text())
-            self.tasks[i].exec_t = int(self.taskTable.item(i, 2).text())
             self.defaulttask[(int(self.taskTable.item(i, 1).text()), int(self.taskTable.item(i, 2).text()))] = "T" + str(i + 1)
+        
+        row = item.row()
+        column = item.column()
+        if column == 1:
+            self.tasks[row].period = int(self.taskTable.item(row, column).text())
+        elif column == 2:
+            self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
 
     @QtCore.Slot()
     def freqForceChecked(self):
