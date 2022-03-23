@@ -335,7 +335,7 @@ class MyWidget(QtWidgets.QWidget):
 
         print(tasks)
 
-        # Scheduability Tests
+        # Schedulability Tests
         if self.algorithmComboBox.currentText() == "EDF":
             schedulability, s = algorithms.schEDF(tasks)
             text = "<p><strong>Schedulability Test: </strong>Exact (Sufficient + Necessary)</p><p>Using the formula &Sigma;(Ci/Di) &le; 1</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
@@ -343,19 +343,17 @@ class MyWidget(QtWidgets.QWidget):
                 text += "<p>The task set <strong>is</strong> schedulable</p>"
             else:
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
-
-        self.textBox.insertHtml(text)
         
         if self.algorithmComboBox.currentText() == "RM":
             print("Nothing here yet...")
 
+        # Other algorithms added here, if time permits
+
+        self.textBox.insertHtml(text)
+
         # Generate plot
 
     """--------------MISC--------------"""
-
-    def updateTasks(self):
-        print("Yay!")
-
 
     def openFile(self):
         filePath = QtWidgets.QFileDialog.getOpenFileName(self, "Open a file", '', 'All Files (*.*)')
