@@ -7,6 +7,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 
 import algorithms
 import taskformats as tf
+import plot
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -20,6 +21,9 @@ class MyWidget(QtWidgets.QWidget):
         self.setWindowTitle("RTOS Scheduling Algorithm Playground")
 
         self.filePath = ""
+
+        # Set up plotting window
+        self.pWindow = plot.plotWindow()
 
         # Task data, in two forms as too support algorithm with different inputs
         self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
@@ -335,6 +339,8 @@ class MyWidget(QtWidgets.QWidget):
 
         print(tasks)
 
+        text = ""
+
         # Schedulability Tests
         if self.algorithmComboBox.currentText() == "EDF":
             schedulability, s = algorithms.schEDF(tasks)
@@ -352,6 +358,7 @@ class MyWidget(QtWidgets.QWidget):
         self.textBox.insertHtml(text)
 
         # Generate plot
+        self.pWindow.show()
 
     """--------------MISC--------------"""
 
