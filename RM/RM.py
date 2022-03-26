@@ -7,8 +7,6 @@ Gilberto A. Lopez Astorga
 UBC-O ENGR 467 2021W 
 """
 
-from asyncio import tasks
-
 class Pseudo_Queue:
     tasks_list = []
     def __init__(self, tasks_list):
@@ -24,6 +22,7 @@ class Task:
         self.name = 'T' + str(number) 
         self.period = period
         self.exec_t = exec
+        
         self.remaining_t = exec
 
         self.release_t0 = True # In case user doesn't wish to release task at t=0
@@ -132,6 +131,13 @@ def task_schedulable (task: Task, tl: Timeline):
     else:
         task.schedulable = False
     
+def deadline_check(Task_master: Pseudo_Queue, tl: Timeline):
+    task: Task
+    for task in Task_master:
+        if not task.finished:# and 
+            task.missed_deadlines.append(tl.c_time)
+
+
 
 def fill_timeline(task: Task,tl: Timeline, Task_master : Pseudo_Queue):
     if task.schedulable:
@@ -152,7 +158,7 @@ def fill_timeline(task: Task,tl: Timeline, Task_master : Pseudo_Queue):
             tl.time.append(tl.c_time)
             tl.c_time += 1
             task.remaining_t -=1
-        task.missed_deadlines.append(tl.c_time)
+        # task.missed_deadlines.append(tl.c_time)
         task.remaining_t = task.exec_t     
         task.finished = True
         task.d_it += 1
