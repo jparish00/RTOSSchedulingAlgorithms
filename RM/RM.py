@@ -54,8 +54,7 @@ class Timeline:
         
         self.new_release = False
 
-
-def input_vars():
+def dummy_input_vars():
     # Task Number, Period, Execution
     # Task_master_dummy = [Task(1,8,7), Task(2,5,2), Task(3,10,2)]
     # Task_master_dummy = [Task(1,8,1), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
@@ -206,21 +205,43 @@ def timeline_completion(Task_master: Pseudo_Queue, tl: Timeline):
     print(tl.cpu_task_usage)
 
 
-Task_master_dummy = input_vars()
+def format_output(Task_master):
+    task: Task
+    
+    for task in Task_master:
+        x=1
 
-Task_master = Pseudo_Queue(Task_master_dummy)
-tl = Timeline()
 
-schedulability_test(Task_master)
+def run_RM(Task_master):
+    '''
 
-# priorities(Task_master, tl)
+    Runs RM algorithm and returns timeline
 
-deadlines_gen(Task_master,tl)
+    Input: List of Task Objects
+    
+    Output: Dictionary, key: tasks, values: tupple with start and end times
 
-timeline_completion(Task_master,tl)
+    '''
+    #
+    Task_master = Pseudo_Queue(Task_master)
 
-for task in Task_master.tasks_list:
-    print(task.name)
-    print('S:', task.start)
-    print('F:', task.end)
-    print('Missed deadlines:', task.missed_deadlines[1:])
+    tl = Timeline()
+
+    schedulability_test(Task_master)
+
+    deadlines_gen(Task_master,tl)
+
+    timeline_completion(Task_master,tl)
+
+    for task in Task_master.tasks_list:
+        print(task.name)
+        print('S:', task.start)
+        print('F:', task.end)
+        print('Missed deadlines:', task.missed_deadlines[1:])
+
+
+Task_master = dummy_input_vars()
+
+run_RM(Task_master)
+
+
