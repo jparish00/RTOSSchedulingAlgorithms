@@ -12,7 +12,6 @@ class Pseudo_Queue:
     def __init__(self, tasks_list):
         self.tasks_list = tasks_list
 
-
 class Task:
     period = 0
     exec_t = 0
@@ -41,11 +40,10 @@ class Task:
 
         self.missed_deadlines = ['ignore']
 
-
 class Timeline:
     max_time = 0 
 
-    def __init__(self, max_time = 50):
+    def __init__(self, max_time = 25):
         self.time = []
 
         self.max_time = max_time
@@ -60,7 +58,9 @@ class Timeline:
 def input_vars():
     # Task Number, Period, Execution
     # Task_master_dummy = [Task(1,8,7), Task(2,5,2), Task(3,10,2)]
-    Task_master_dummy = [Task(1,8,9), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
+    # Task_master_dummy = [Task(1,8,1), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
+    # Task_master_dummy = [Task(1,5,3), Task(2,8,3)]#, Task(3,6,2)]
+    Task_master_dummy = [Task(1,8,1), Task(2,5,4), Task(3,10,2)]
 
     return Task_master_dummy
 
@@ -94,12 +94,14 @@ def released_tasks (tasks, tl: Timeline):
     task: Task
     for task in tasks:
         if tl.c_time % task.period == 0 and tl.c_time != 0 and task.released_ts[-1] != tl.c_time: # and not task.finished:
-            if task.remaining_t !=0:
+            if task.remaining_t !=0 and not task.finished:# and task.deadlines[task.d_it-1] <= tl.c_time:
                 task.missed_deadlines.append(tl.c_time)
-                task.released_ts.append(tl.c_time)
+                task.d_it += 1
+            task.released_ts.append(tl.c_time)
             task.released = True
             task.finished = False
             tl.new_release = True
+            task.remaining_t = task.exec_t
         elif task.finished:
             task.released =  False
 
@@ -128,7 +130,7 @@ def deadlines_gen(Task_master: Pseudo_Queue, tl: Timeline):
 
 def task_schedulable (task: Task, tl: Timeline):
     
-    if ((task.exec_t + tl.c_time) < task.deadlines[task.d_it]):
+    if ((task.remaining_t + tl.c_time) < task.deadlines[task.d_it]):
         task.schedulable = True
    
     else:
@@ -145,8 +147,7 @@ def fill_timeline(task: Task,tl: Timeline, Task_master : Pseudo_Queue):
             released_tasks(Task_master.tasks_list, tl)
             if tl.new_release:
                 break
-        if task.remaining_t == 0:
-            task.finished = True
+
 
     else:
         while (tl.c_time < task.deadlines[task.d_it]):
@@ -164,7 +165,8 @@ def fill_timeline(task: Task,tl: Timeline, Task_master : Pseudo_Queue):
         task.d_it += 1
 
     if task.remaining_t == 0:
-        task.remaining_t = task.exec_t
+        task.finished = True
+        # task.remaining_t = task.exec_t
         task.d_it +=1
 
 
@@ -211,7 +213,7 @@ tl = Timeline()
 
 schedulability_test(Task_master)
 
-priorities(Task_master, tl)
+# priorities(Task_master, tl)
 
 deadlines_gen(Task_master,tl)
 
@@ -221,4 +223,4 @@ for task in Task_master.tasks_list:
     print(task.name)
     print('S:', task.start)
     print('F:', task.end)
-    print('Missed deadlines:', task.missed_deadlines[1:-1])
+    print('Missed deadlines:', task.missed_deadlines[1:])
