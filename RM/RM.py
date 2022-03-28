@@ -12,6 +12,7 @@ class Pseudo_Queue:
     def __init__(self, tasks_list):
         self.tasks_list = tasks_list
 
+
 class Task:
     period = 0
     exec_t = 0
@@ -40,10 +41,11 @@ class Task:
 
         self.missed_deadlines = ['ignore']
 
+
 class Timeline:
     max_time = 0 
 
-    def __init__(self, max_time = 25):
+    def __init__(self, max_time = 18):
         self.time = []
 
         self.max_time = max_time
@@ -54,12 +56,14 @@ class Timeline:
         
         self.new_release = False
 
+
 def dummy_input_vars():
     # Task Number, Period, Execution
     # Task_master_dummy = [Task(1,8,7), Task(2,5,2), Task(3,10,2)]
     # Task_master_dummy = [Task(1,8,1), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
-    # Task_master_dummy = [Task(1,5,3), Task(2,8,3)]#, Task(3,6,2)]
-    Task_master_dummy = [Task(1,8,1), Task(2,5,4), Task(3,10,2)]
+    # Task_master_dummy = [Task(1,5,3), Task(2,8,3)]
+    # Task_master_dummy = [Task(1,8,1), Task(2,5,4), Task(3,10,2)]
+    Task_master_dummy = [Task(1,4,1), Task(2,5,2), Task(3,7,2)]
 
     return Task_master_dummy
 
@@ -95,7 +99,8 @@ def released_tasks (tasks, tl: Timeline):
         if tl.c_time % task.period == 0 and tl.c_time != 0 and task.released_ts[-1] != tl.c_time: # and not task.finished:
             if task.remaining_t !=0 and not task.finished:# and task.deadlines[task.d_it-1] <= tl.c_time:
                 task.missed_deadlines.append(tl.c_time)
-                task.d_it += 1
+                if len(task.deadlines)-1 > task.d_it:
+                    task.d_it += 1
             task.released_ts.append(tl.c_time)
             task.released = True
             task.finished = False
@@ -117,6 +122,18 @@ def priorities(Task_master : Pseudo_Queue, tl: Timeline):
         i += 1
 
 
+def priorities_EDF(Task_master : Pseudo_Queue, tl: Timeline):
+    #Sorting priorities based on period
+    task : Task
+
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
+    i=1
+    for task in Task_master.tasks_list:
+        task.priority = i
+        i += 1
+
+
 def deadlines_gen(Task_master: Pseudo_Queue, tl: Timeline):
     # Generating deadlines
     task: Task
@@ -128,7 +145,6 @@ def deadlines_gen(Task_master: Pseudo_Queue, tl: Timeline):
 
 
 def task_schedulable (task: Task, tl: Timeline):
-    
     if ((task.remaining_t + tl.c_time) < task.deadlines[task.d_it]):
         task.schedulable = True
    
@@ -157,16 +173,15 @@ def fill_timeline(task: Task,tl: Timeline, Task_master : Pseudo_Queue):
             released_tasks(Task_master.tasks_list, tl)
             if tl.new_release:
                 break
-        # task.missed_deadlines.append(tl.c_time)
         task.remaining_t = task.exec_t     
-        # if task.deadlines[task.d_it]
         task.finished = True
-        task.d_it += 1
+        if len(task.deadlines)-1 > task.d_it:
+            task.d_it += 1
 
     if task.remaining_t == 0:
         task.finished = True
-        # task.remaining_t = task.exec_t
-        task.d_it +=1
+        if len(task.deadlines)-1 > task.d_it:
+            task.d_it += 1
 
 
 def cpu_idle(tl: Timeline):
@@ -205,6 +220,36 @@ def timeline_completion(Task_master: Pseudo_Queue, tl: Timeline):
     print(tl.cpu_task_usage)
 
 
+def timeline_completion_EDF(Task_master: Pseudo_Queue, tl: Timeline):
+    task: Task
+    check_idle = 0 
+    while(1):
+        for task in Task_master.tasks_list:
+
+            released_tasks(Task_master.tasks_list, tl)
+            priorities_EDF(Task_master,tl)
+
+            if task.released and not task.finished and task.priority == 1:
+                check_idle = 0 
+                task_schedulable(task, tl)     # check if task will finish on time
+                task.start.append(tl.c_time)
+                fill_timeline(task,tl, Task_master)         # filling timeline with task usage
+                task.end.append(tl.c_time)
+            else:
+                check_idle +=1
+                if check_idle == len(Task_master.tasks_list):
+                    cpu_idle(tl)
+                    check_idle = 0
+
+            if (tl.c_time > tl.max_time):
+                break
+        else:
+            continue
+        break
+    
+    print(tl.cpu_task_usage)    
+
+
 def format_output(Task_master):
     task: Task
     
@@ -240,8 +285,37 @@ def run_RM(Task_master):
         print('Missed deadlines:', task.missed_deadlines[1:])
 
 
+def run_EDF(Task_master):
+    '''
+
+    Runs EDF algorithm and returns timeline
+
+    Input: List of Task Objects
+    
+    Output: Dictionary, key: tasks, values: tupple with start and end times
+
+    '''
+    #
+    Task_master = Pseudo_Queue(Task_master)
+
+    tl = Timeline()
+
+    # schedulability_test(Task_master)
+
+    deadlines_gen(Task_master,tl)
+
+    timeline_completion_EDF(Task_master,tl)
+
+    for task in Task_master.tasks_list:
+        print(task.name)
+        print('S:', task.start)
+        print('F:', task.end)
+        print('Missed deadlines:', task.missed_deadlines[1:])
+
+
+
 Task_master = dummy_input_vars()
 
-run_RM(Task_master)
+run_EDF(Task_master)
 
 
