@@ -1,6 +1,7 @@
 PySide6
 altair
 altair_viewer
+plotly
 numpy
 pandas
 datetime

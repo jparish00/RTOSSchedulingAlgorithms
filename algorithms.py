@@ -15,3 +15,20 @@ def schEDF(tsk):
     return schedulability, s
 
 # I need help with the main algorithm :(
+
+
+#REGULAR ALGORITHMS
+# Schedualability test format
+
+# input -> tasks[Task(), ...]
+# output -> schedulability, utilization
+
+# Algorithm
+
+# input -> tasks[Task(), ...], time=int
+# output -> Timelines[(name=str, blockstart=int, blockend=int), ...], misseddeadline[(name=str, timemissed=int)]
+
+# Cycly Conserving Algo
+
+# input -> tasks[Task(), ...], time=int, freqs[], invocationCount=int
+# output -> Timelines[((name=str, blockstart=int, blockend=int, percentofMaxFreq=float, misseddeadline=bool), ...]
