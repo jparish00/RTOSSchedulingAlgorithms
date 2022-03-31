@@ -8,6 +8,10 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 from itertools import groupby 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
 
+
+def format_input(tasks_list):
+    Task_master = PseudoQueue(tasks_list)
+    return Task_master
 def dummy_input_vars():
     # Task Number, Period, Execution
     # Task_master_dummy = [Task(1,8,7), Task(2,5,2), Task(3,10,2)]
@@ -46,6 +50,27 @@ def task_schedulable (task: Task, tl: Timeline):
     else:
         task.schedulable = False
 
+def priorities(Task_master : PseudoQueue, tl: Timeline, alg):
+    '''
+    Priorities defined by sorting task list and assigning each task priority (1 being the highest)
+    '''
+    
+    task : Task
+    if alg == 'EDF':
+        Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
+        Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
+        i=1
+        for task in Task_master.tasks_list:
+            task.priority = i
+            i += 1
+
+    elif alg == 'RM':
+        Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.period)
+        Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
+        i=1
+        for task in Task_master.tasks_list:
+            task.priority = i
+            i += 1
 
 def cpu_idle(tl: Timeline, dynamic = False):
     tl.time.append(tl.c_time)
@@ -146,23 +171,9 @@ def output_RM_EDF(Task_master : PseudoQueue, tl: Timeline):
     return output
 
 """
---------------EDF and DVS EDF CC uses this function ---------------------------------------------
-"""
-
-def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
-    #Sorting priorities based on Deadline
-    task : Task
-
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
-    i=1
-    for task in Task_master.tasks_list:
-        task.priority = i
-        i += 1
-
-"""
 --------------------------------EDF DVS uses this function ------------------------------------------
 """
+
 def output_EDF_CC(Task_master : PseudoQueue, tl: Timeline):
     """
     Formatting Backend output RM EDF

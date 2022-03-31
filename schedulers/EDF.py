@@ -8,10 +8,13 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
-from schedulers.helpers.Helpers import released_tasks, priorities_EDF, deadlines_gen, task_schedulable, cpu_idle, fill_timeline
+from schedulers.helpers.Helpers import released_tasks, priorities, deadlines_gen, task_schedulable, cpu_idle, fill_timeline
 
 
 def schedulability_test_EDF_WC(Task_master: PseudoQueue):
+    """
+    EDF Schedulability test for Worst Case
+    """
     task: Task
     util = 0
 
@@ -23,9 +26,10 @@ def schedulability_test_EDF_WC(Task_master: PseudoQueue):
 
     if (util <= 1):
         print("Tasks schedulable under EDF")
+        return (True, util)
     else:
         print("Tasks are not schedulable under EDF")
-
+        return (False, util)
 
 def timeline_completion_EDF(Task_master: PseudoQueue, tl: Timeline):
     task: Task
@@ -34,7 +38,7 @@ def timeline_completion_EDF(Task_master: PseudoQueue, tl: Timeline):
         for task in Task_master.tasks_list:
 
             released_tasks(Task_master.tasks_list, tl)
-            priorities_EDF(Task_master,tl)
+            priorities(Task_master,tl,'EDF')
 
             if task.released and not task.finished and task.priority == 1:
                 check_idle = 0 
@@ -70,7 +74,7 @@ def run_EDF(Task_master, max_t):
 
     '''
     #
-    Task_master = PseudoQueue(Task_master)
+    # Task_master = PseudoQueue(Task_master)
 
     tl = Timeline(max_time = max_t)
 

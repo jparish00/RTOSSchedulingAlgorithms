@@ -12,7 +12,7 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
-from schedulers.helpers.Helpers import priorities_EDF, deadlines_gen, task_schedulable, cpu_idle
+from schedulers.helpers.Helpers import priorities, deadlines_gen, task_schedulable, cpu_idle
 
 from math import isclose
 
@@ -136,7 +136,7 @@ def timeline_completion_EDF_CV(Task_master: PseudoQueue, tl: Timeline):
         for task in Task_master.tasks_list:
 
             released_tasks_dynamic(Task_master.tasks_list, tl)
-            priorities_EDF(Task_master,tl)
+            priorities(Task_master,tl,'EDF')
 
             if task.d_it >= len(task.invocations):
                 continue 
@@ -171,15 +171,6 @@ def timeline_completion_EDF_CV(Task_master: PseudoQueue, tl: Timeline):
             continue
         break
     
-    # print(tl.cpu_task_usage)    
-
-
-def format_output(Task_master):
-    task: Task
-    
-    for task in Task_master:
-        x=1
-
 
 def run_EDF_CC(Task_master, max_t, av_freqs):
     '''
@@ -192,7 +183,7 @@ def run_EDF_CC(Task_master, max_t, av_freqs):
 
     '''
     #
-    Task_master = PseudoQueue(Task_master)
+    # Task_master = PseudoQueue(Task_master)
 
     tl = Timeline(av_freqs, max_t)
 

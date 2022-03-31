@@ -7,7 +7,6 @@ Gilberto A. Lopez Astorga
 UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
-from math import isclose
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
 from schedulers.helpers.Helpers import released_tasks, deadlines_gen, task_schedulable, cpu_idle, fill_timeline
 
@@ -100,7 +99,7 @@ def run_RM(Task_master, max_t):
 
     '''
     #
-    Task_master = PseudoQueue(Task_master)
+    # Task_master = PseudoQueue(Task_master)
 
     tl = Timeline(max_time = max_t)
 
