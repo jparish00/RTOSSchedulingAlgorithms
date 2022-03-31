@@ -27,16 +27,39 @@ def dummy_input_vars():
 
     return Task_master_dummy
 
-def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
-    #Sorting priorities based on Deadline
-    task : Task
-
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
-    i=1
+"""
+---------------- ALL Algorithms uses these functioms---------------------------------
+"""
+def deadlines_gen(Task_master: PseudoQueue, tl: Timeline):
+    # Generating deadlines
+    task: Task
     for task in Task_master.tasks_list:
-        task.priority = i
-        i += 1
+        dl = 0
+        while(dl <= tl.max_time):
+            dl = dl + task.period
+            task.deadlines.append(dl)
+
+def task_schedulable (task: Task, tl: Timeline):
+    if ((task.remaining_t + tl.c_time) < task.deadlines[task.d_it]):
+        task.schedulable = True
+   
+    else:
+        task.schedulable = False
+
+
+def cpu_idle(tl: Timeline, dynamic = False):
+    tl.time.append(tl.c_time)
+    tl.cpu_task_usage.append('IDLE')
+    if dynamic:
+        tl.c_time += .001
+    else:
+        tl.c_time += 1
+
+
+"""
+------------------- RM and EDF uses these functions -----------------------------------
+"""
+
         
 def released_tasks (tasks, tl: Timeline):
     task: Task
@@ -57,6 +80,41 @@ def released_tasks (tasks, tl: Timeline):
 
         elif task.finished:
             task.released =  False
+
+
+def fill_timeline(task: Task,tl: Timeline, Task_master : PseudoQueue):
+    if task.schedulable:
+        while(task.remaining_t != 0): 
+            task.remaining_t -=1
+            tl.cpu_task_usage.append(task.name)
+            tl.time.append(tl.c_time)
+            tl.c_time += 1
+            released_tasks(Task_master.tasks_list, tl)
+            if tl.new_release:
+                tl.new_release = False
+                break
+
+    else:
+        while (tl.c_time < task.deadlines[task.d_it]):
+            tl.cpu_task_usage.append(task.name)
+            tl.time.append(tl.c_time)
+            tl.c_time += 1
+            task.remaining_t -=1
+            released_tasks(Task_master.tasks_list, tl)
+            if tl.new_release:
+                tl.new_release = False
+                break
+        task.remaining_t = task.exec_t     
+        task.finished = True
+        if len(task.deadlines)-1 > task.d_it:
+            task.d_it += 1
+
+    if task.remaining_t == 0:
+        task.finished = True
+        if len(task.deadlines)-1 > task.d_it:
+            task.d_it += 1
+
+
 
 def output_RM_EDF(Task_master : PseudoQueue, tl: Timeline):
     """
@@ -87,6 +145,24 @@ def output_RM_EDF(Task_master : PseudoQueue, tl: Timeline):
     print(output)
     return output
 
+"""
+--------------EDF and DVS EDF CC uses this function ---------------------------------------------
+"""
+
+def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
+    #Sorting priorities based on Deadline
+    task : Task
+
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
+    i=1
+    for task in Task_master.tasks_list:
+        task.priority = i
+        i += 1
+
+"""
+--------------------------------EDF DVS uses this function ------------------------------------------
+"""
 def output_EDF_CC(Task_master : PseudoQueue, tl: Timeline):
     """
     Formatting Backend output RM EDF
