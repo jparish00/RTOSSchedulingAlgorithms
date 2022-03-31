@@ -8,7 +8,7 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
-from schedulers.helpers.Helpers import released_tasks
+from schedulers.helpers.Helpers import released_tasks, priorities_EDF
 
 
 def schedulability_test_EDF_WC(Task_master: PseudoQueue):
@@ -26,17 +26,6 @@ def schedulability_test_EDF_WC(Task_master: PseudoQueue):
     else:
         print("Tasks are not schedulable under EDF")
 
-
-def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
-    #Sorting priorities based on Deadline
-    task : Task
-
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
-    i=1
-    for task in Task_master.tasks_list:
-        task.priority = i
-        i += 1
  
 def deadlines_gen(Task_master: PseudoQueue, tl: Timeline):
     # Generating deadlines

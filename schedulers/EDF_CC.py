@@ -12,21 +12,9 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
+from schedulers.helpers.Helpers import priorities_EDF
+
 from math import isclose
-
-def dummy_input_vars():
-    # Task Number, Period, Execution
-    # Task_master_dummy = [Task(1,8,7), Task(2,5,2), Task(3,10,2)]
-    # Task_master_dummy = [Task(1,8,1), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
-    # Task_master_dummy = [Task(1,5,3), Task(2,8,3)]
-    # Task_master_dummy = [Task(1,8,1), Task(2,5,4), Task(3,10,2)]
-    t1_ac = [2,1]
-    t2_ac = [1,1]
-    t3_ac = [1,1]
-    
-    Task_master_dummy = [Task(1,8,3,t1_ac), Task(2,10,3,t2_ac), Task(3,14,1,t3_ac)]
-
-    return Task_master_dummy
 
 
 def utilization_EDF_CV(Task_master: PseudoQueue, tl: Timeline):
@@ -96,17 +84,6 @@ def released_tasks_dynamic(tasks, tl: Timeline):
         elif task.finished:
             task.released =  False
 
-
-def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
-    #Sorting priorities based on Deadline
-    task : Task
-
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
-    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
-    i=1
-    for task in Task_master.tasks_list:
-        task.priority = i
-        i += 1
  
 def deadlines_gen(Task_master: PseudoQueue, tl: Timeline):
     # Generating deadlines

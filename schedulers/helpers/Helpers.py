@@ -27,6 +27,17 @@ def dummy_input_vars():
 
     return Task_master_dummy
 
+def priorities_EDF(Task_master : PseudoQueue, tl: Timeline):
+    #Sorting priorities based on Deadline
+    task : Task
+
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.deadlines[x.d_it])
+    Task_master.tasks_list = sorted(Task_master.tasks_list, key=lambda x: x.released, reverse = True)
+    i=1
+    for task in Task_master.tasks_list:
+        task.priority = i
+        i += 1
+        
 def released_tasks (tasks, tl: Timeline):
     task: Task
 
