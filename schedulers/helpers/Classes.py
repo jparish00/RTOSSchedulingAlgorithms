@@ -1,3 +1,12 @@
+"""
+Defining convenient classes
+
+Gilberto A. Lopez Astorga
+31/03/22
+UBC-O ENGR 467 2021W - RT Embedded Systems
+"""
+
+
 class PseudoQueue:
     tasks_list = []
     def __init__(self, tasks_list):

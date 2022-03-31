@@ -1,12 +1,10 @@
 """
-RM Algorithm --- Rate Monothonic --- Priority based on period
-Input :  Task_master dictionary, with period and execution time
+Functions acting as assisters for scheduling algorithms
 
 Gilberto A. Lopez Astorga
-14/03/22
-UBC-O ENGR 467 2021W 
+31/03/22
+UBC-O ENGR 467 2021W - RT Embedded Systems
 """
-from math import isclose
 from itertools import groupby 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
 
@@ -16,11 +14,16 @@ def dummy_input_vars():
     # Task_master_dummy = [Task(1,8,1), Task(2,15,3), Task(3,20,4), Task(4,22,6)]
     # Task_master_dummy = [Task(1,5,3), Task(2,8,3)]
     # Task_master_dummy = [Task(1,8,1), Task(2,5,4), Task(3,10,2)]
-    t1_ac = [2,1]
-    t2_ac = [1,1]
-    t3_ac = [1,1]
+    # t1_ac = [2,1]
+    # t2_ac = [1,1]
+    # t3_ac = [1,1]
     
-    Task_master_dummy = [Task(1,8,3,t1_ac), Task(2,10,3,t2_ac), Task(3,14,1,t3_ac)]
+    # Task_master_dummy = [Task(1,8,3,t1_ac), Task(2,10,3,t2_ac), Task(3,14,1,t3_ac)]
+    t1_ac = [1,1]
+    t2_ac = [1,1]
+    t3_ac = [2,1]
+    
+    Task_master_dummy = [Task(1,6,2,t1_ac), Task(2,8,3,t2_ac), Task(3,12,3,t3_ac)]
 
     return Task_master_dummy
 

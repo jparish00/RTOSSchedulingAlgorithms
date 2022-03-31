@@ -1,10 +1,14 @@
 """
-RM Algorithm --- Rate Monothonic --- Priority based on period
-Input :  Task_master dictionary, with period and execution time
+EDF CC Algorithm --- Earliest Deadline First Cycle Conserving --- Priority based on deadline 
+
+EDF CC is a Dynamic Voltage Scaling which purpose is to save powe by reducing CPU frequency when possible
+-Power is proportional to frequency
+
+Input :  List of initialized 'Task', including invocations; Max time
 
 Gilberto A. Lopez Astorga
-14/03/22
-UBC-O ENGR 467 2021W 
+31/03/22
+UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
@@ -48,7 +52,16 @@ def cpu_freq(utilization, tl: Timeline):
     if len(tl.available_frequencies) == 0:
         return utilization
     else:
-        freq = min(tl.available_frequencies, key = lambda x: abs(x-utilization))
+        i=0
+        pFm=0
+        for freq in tl.available_frequencies:
+            if (freq - utilization) <= 0:
+                pFm = tl.available_frequencies[i]
+                break
+            i+=1
+        if pFm == 0:
+            pFm = tl.avaiblable_frequencies[-1]
+        # freq = min(tl.available_frequencies, key = lambda x: abs(x-utilization))
     return freq
 
 

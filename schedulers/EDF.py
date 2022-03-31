@@ -1,10 +1,10 @@
 """
-RM Algorithm --- Rate Monothonic --- Priority based on period
-Input :  Task_master dictionary, with period and execution time
+EDF Algorithm --- Earliest Deadline First --- Priority based on deadline
+Input :  List of initialized 'Task' ; Max time
 
 Gilberto A. Lopez Astorga
-14/03/22
-UBC-O ENGR 467 2021W 
+31/03/22
+UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue

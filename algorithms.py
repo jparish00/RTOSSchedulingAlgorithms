@@ -32,3 +32,8 @@ def schEDF(tsk):
 
 # input -> tasks[Task(), ...], time=int, freqs[], invocationCount=int
 # output -> Timelines[((name=str, blockstart=int, blockend=int, percentofMaxFreq=float, misseddeadline=bool), ...]
+
+# Proposed: Cyclic Conserving
+# input -> tasks[Task(), ...], time=int, freqs[]
+# output -> Timelines[((name=str, blockstart=int, blockend=int, percentofMaxFreq=float), ...], misseddeadline[(name=str, timemissed=int)]
+
