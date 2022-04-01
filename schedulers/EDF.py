@@ -21,14 +21,9 @@ def schedulability_test_EDF_WC(Task_master: PseudoQueue):
     for task in Task_master.tasks_list:
         util = util + (task.exec_t/task.period)
 
-    print('Utilization from tasks:')
-    print(util)
-
     if (util <= 1):
-        print("Tasks schedulable under EDF")
         return (True, util)
     else:
-        print("Tasks are not schedulable under EDF")
         return (False, util)
 
 def timeline_completion_EDF(Task_master: PseudoQueue, tl: Timeline):
@@ -73,22 +68,13 @@ def run_EDF(Task_master, max_t):
     Output: Dictionary, key: tasks, values: tupple with start and end times
 
     '''
-    #
-    # Task_master = PseudoQueue(Task_master)
-
     tl = Timeline(max_time = max_t)
 
-    # schedulability_test(Task_master)
+    schedulability_test_EDF_WC(Task_master)
 
     deadlines_gen(Task_master,tl)
 
     timeline_completion_EDF(Task_master,tl)
-
-    for task in Task_master.tasks_list:
-        print(task.name)
-        print('S:', task.start)
-        print('F:', task.end)
-        print('Missed deadlines:', task.missed_deadlines[1:])
 
     return Task_master, tl
 

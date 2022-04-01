@@ -11,6 +11,7 @@ Gilberto A. Lopez Astorga
 UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
+from schedulers.EDF import schedulability_test_EDF_WC
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
 from schedulers.helpers.Helpers import priorities, deadlines_gen, task_schedulable, cpu_idle
 
@@ -48,8 +49,7 @@ def cpu_freq(utilization, tl: Timeline):
                 break
             i+=1
         if pFm == 0:
-            pFm = tl.avaiblable_frequencies[-1]
-        # freq = min(tl.available_frequencies, key = lambda x: abs(x-utilization))
+            pFm = tl.available_frequencies[-1]
     return freq
 
 
@@ -182,22 +182,21 @@ def run_EDF_CC(Task_master, max_t, av_freqs):
     Output: PseudoQueue, Timeline
 
     '''
-    #
     # Task_master = PseudoQueue(Task_master)
 
     tl = Timeline(av_freqs, max_t)
 
-    # schedulability_test(Task_master)
+    schedulability_test_EDF_WC(Task_master)
 
     deadlines_gen(Task_master,tl)
 
     timeline_completion_EDF_CV(Task_master,tl)
 
-    for task in Task_master.tasks_list:
-        print(task.name)
-        print('S:', task.start)
-        print('F:', task.end)
-        print('Missed deadlines:', task.missed_deadlines[1:])
+    # for task in Task_master.tasks_list:
+    #     print(task.name)
+    #     print('S:', task.start)
+    #     print('F:', task.end)
+    #     print('Missed deadlines:', task.missed_deadlines[1:])
     return Task_master, tl
             
             

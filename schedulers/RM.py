@@ -21,14 +21,10 @@ def schedulability_test(Task_master: PseudoQueue):
     for task in Task_master.tasks_list:
         util = util + (task.exec_t/task.period)
 
-    print('Utilization from tasks:')
-    print(util)
-    print('Utilization bound:')
-    print(util_bound)
     if (util<= util_bound):
-        print("Schedulability test passed. Tasks schedulable under RM")
+        return (True, util, util_bound)
     else:
-        print("Schedulability test not passed. Need to draw timeline to further test")
+        return (False, util, util_bound)
 
     
 def util_bounds_RM(Task_master_list):
@@ -98,8 +94,6 @@ def run_RM(Task_master, max_t):
     Output: Dictionary, key: tasks, values: tupple with start and end times
 
     '''
-    #
-    # Task_master = PseudoQueue(Task_master)
 
     tl = Timeline(max_time = max_t)
 
@@ -108,12 +102,6 @@ def run_RM(Task_master, max_t):
     deadlines_gen(Task_master,tl)
 
     timeline_completion(Task_master,tl)
-
-    for task in Task_master.tasks_list:
-        print(task.name)
-        print('S:', task.start)
-        print('F:', task.end)
-        print('Missed deadlines:', task.missed_deadlines[1:])
 
     return Task_master, tl
             

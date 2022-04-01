@@ -38,7 +38,6 @@ output = output_RM_EDF(tm,tl)
 #EDF CC
 av_freqs=[1,.75,.5]
 av_freqs=[]
-# av_freqs=[]
 
 Task_master = dummy_input_vars()
 Task_master = format_input(Task_master)
