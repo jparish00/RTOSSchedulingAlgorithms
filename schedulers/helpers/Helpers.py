@@ -167,7 +167,7 @@ def output_RM_EDF(Task_master : PseudoQueue, tl: Timeline):
     output.append(timelines_o)
     output.append(m_d)
 
-    print(output)
+    #print(output)
     return output
 
 """
@@ -200,5 +200,5 @@ def output_EDF_CC(Task_master : PseudoQueue, tl: Timeline):
     output.append(timelines_o)
     output.append(m_d)
 
-    print(output)
+    #print(output)
     return output    
