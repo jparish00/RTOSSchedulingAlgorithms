@@ -29,7 +29,6 @@ class MyWidget(QtWidgets.QWidget):
         self.frequencies = []
 
         # Task data, in two forms as too support algorithm with different inputs[Dict support removed for obvious reasons]
-        # self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
         self.tasks = [tf.Task(1,4,1, []), tf.Task(2, 5, 2, []), tf.Task(3, 7, 2, [])]
 
         # Menu bar setup
@@ -111,6 +110,18 @@ class MyWidget(QtWidgets.QWidget):
         initWidget(self.invLabel, "invLabel")
         self.invLabel.setBuddy(self.invSpinBox)
 
+        # Spin box for # of Invocations
+        self.widthSpinBox = QtWidgets.QSpinBox()
+        self.widthSpinBox.setMinimum(1)
+        self.widthSpinBox.setMaximum(150)
+        self.widthSpinBox.setValue(24)
+        self.widthSpinBox.valueChanged.connect(self.updateWidth)
+
+        # Label widget set as buddy to spinbox
+        self.widthLabel = QtWidgets.QLabel("Timeline Width:")
+        initWidget(self.widthLabel, "widthLabel")
+        self.widthLabel.setBuddy(self.widthSpinBox)
+
         # Combo Box containing usable algorithms
         self.algorithmComboBox = QtWidgets.QComboBox()
         initWidget(self.algorithmComboBox, "algorithmComboBox")
@@ -127,6 +138,9 @@ class MyWidget(QtWidgets.QWidget):
         tasksLayout = QtWidgets.QHBoxLayout()
         tasksLayout.addWidget(self.taskLabel)
         tasksLayout.addWidget(self.taskSpinBox)
+        tasksLayout.addStretch(1)
+        tasksLayout.addWidget(self.widthLabel)
+        tasksLayout.addWidget(self.widthSpinBox)
         tasksLayout.addStretch(1)
         tasksLayout.addWidget(self.invLabel)
         tasksLayout.addWidget(self.invSpinBox)
@@ -347,6 +361,11 @@ class MyWidget(QtWidgets.QWidget):
             self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
             self.tasks[row].remaining_t = int(self.taskTable.item(row, column).text())
 
+    @QtCore.Slot()
+    def updateWidth(self):
+        self.timelineWidth = self.widthSpinBox.value()
+        print(self.timelineWidth)
+
 
     @QtCore.Slot()
     def freqLineEdited(self):
@@ -419,6 +438,8 @@ class MyWidget(QtWidgets.QWidget):
         schedulability = True
         s = 0.85
 
+        taskcopy = self.tasks            
+
         # Schedulability Test on currently selected algorithm
         if self.algorithmComboBox.currentText() == "EDF":
             schedulability, s = algorithms.schEDF(tasks)
@@ -429,7 +450,7 @@ class MyWidget(QtWidgets.QWidget):
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
         
         if self.algorithmComboBox.currentText() == "RM":
-            schedulability, s, bounds = rm.schedulability_test(help.format_input(self.tasks))
+            schedulability, s, bounds = rm.schedulability_test(help.format_input(taskcopy))
             text = "<p><strong>Schedulability Test: </strong>Sufficient</p><p>Using the formula &Sigma;(Ci/Di) &le; " + str(bounds) + "</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
             if schedulability:
                 text += "<p>The task set <strong>is</strong> schedulable</p>"
@@ -448,10 +469,11 @@ class MyWidget(QtWidgets.QWidget):
         self.missedDeadlines = [("T1", 2), ("T2", 5)]
 
         # Algorithm processing
+
         if currentAlgo == "RM":
 
-            temp = help.format_input(self.tasks)
-            tm, tl = rm.run_RM(temp, self.timelineWidth)
+
+            tm, tl = rm.run_RM(taskcopy, self.timelineWidth)
 
             self.Timelines = help.output_RM_EDF(tm,tl)
             self.Timelines[0] = sorted(self.Timelines[0])
