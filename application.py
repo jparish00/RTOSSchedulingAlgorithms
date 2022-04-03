@@ -11,6 +11,7 @@ import algorithms
 import schedulers.RM as rm
 import schedulers.helpers.Helpers as help
 import schedulers.helpers.Classes as tf
+import EDF.EDF as edf
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -24,12 +25,11 @@ class MyWidget(QtWidgets.QWidget):
 
         # Class variables
         self.filePath = ""
-        self.timelineWidth = 120
+        self.timelineWidth = 15
         self.frequencies = []
 
         # Task data, in two forms as too support algorithm with different inputs[Dict support removed for obvious reasons]
-        # self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
-        self.tasks = [tf.Task(1,5,2, []), tf.Task(2, 6, 1, []), tf.Task(3, 7, 3, [])]
+        self.tasks = [tf.Task(1,4,1, []), tf.Task(2, 5, 2, []), tf.Task(3, 7, 2, [])]
 
         # Menu bar setup
         self.menubar = self.createMenuBar()
@@ -110,6 +110,18 @@ class MyWidget(QtWidgets.QWidget):
         initWidget(self.invLabel, "invLabel")
         self.invLabel.setBuddy(self.invSpinBox)
 
+        # Spin box for # of Invocations
+        self.widthSpinBox = QtWidgets.QSpinBox()
+        self.widthSpinBox.setMinimum(1)
+        self.widthSpinBox.setMaximum(150)
+        self.widthSpinBox.setValue(24)
+        self.widthSpinBox.valueChanged.connect(self.updateWidth)
+
+        # Label widget set as buddy to spinbox
+        self.widthLabel = QtWidgets.QLabel("Timeline Width:")
+        initWidget(self.widthLabel, "widthLabel")
+        self.widthLabel.setBuddy(self.widthSpinBox)
+
         # Combo Box containing usable algorithms
         self.algorithmComboBox = QtWidgets.QComboBox()
         initWidget(self.algorithmComboBox, "algorithmComboBox")
@@ -126,6 +138,9 @@ class MyWidget(QtWidgets.QWidget):
         tasksLayout = QtWidgets.QHBoxLayout()
         tasksLayout.addWidget(self.taskLabel)
         tasksLayout.addWidget(self.taskSpinBox)
+        tasksLayout.addStretch(1)
+        tasksLayout.addWidget(self.widthLabel)
+        tasksLayout.addWidget(self.widthSpinBox)
         tasksLayout.addStretch(1)
         tasksLayout.addWidget(self.invLabel)
         tasksLayout.addWidget(self.invSpinBox)
@@ -344,6 +359,13 @@ class MyWidget(QtWidgets.QWidget):
 
         elif column == 2:
             self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
+            self.tasks[row].remaining_t = int(self.taskTable.item(row, column).text())
+
+    @QtCore.Slot()
+    def updateWidth(self):
+        self.timelineWidth = self.widthSpinBox.value()
+        print(self.timelineWidth)
+
 
     @QtCore.Slot()
     def freqLineEdited(self):
@@ -416,6 +438,8 @@ class MyWidget(QtWidgets.QWidget):
         schedulability = True
         s = 0.85
 
+        taskcopy = self.tasks            
+
         # Schedulability Test on currently selected algorithm
         if self.algorithmComboBox.currentText() == "EDF":
             schedulability, s = algorithms.schEDF(tasks)
@@ -426,7 +450,7 @@ class MyWidget(QtWidgets.QWidget):
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
         
         if self.algorithmComboBox.currentText() == "RM":
-            schedulability, s, bounds = rm.schedulability_test(help.format_input(self.tasks))
+            schedulability, s, bounds = rm.schedulability_test(help.format_input(taskcopy))
             text = "<p><strong>Schedulability Test: </strong>Sufficient</p><p>Using the formula &Sigma;(Ci/Di) &le; " + str(bounds) + "</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
             if schedulability:
                 text += "<p>The task set <strong>is</strong> schedulable</p>"
@@ -441,20 +465,29 @@ class MyWidget(QtWidgets.QWidget):
         currentAlgo = self.algorithmComboBox.currentText()
 
         # Generate plot
-        self.Timelines = [("T1", 0, 2), ("T1", 4, 5), ("T1", 8, 10), ("T2", 2, 4), ("T2", 5, 7), ("T3", 7, 8)]
         self.Timelinesf = [("T1", 0, 3, 0.87), ("T2", 3, 4.5, 0.9), ("T3", 4.5, 7, 0.6)]
         self.missedDeadlines = [("T1", 2), ("T2", 5)]
 
+        # Algorithm processing
+
         if currentAlgo == "RM":
-            tm, tl = rm.run_RM(help.format_input(self.tasks), self.timelineWidth)
+
+
+            tm, tl = rm.run_RM(taskcopy, self.timelineWidth)
+
             self.Timelines = help.output_RM_EDF(tm,tl)
             self.Timelines[0] = sorted(self.Timelines[0])
 
-            for i in range(len(self.Timelines)):
-                print(self.Timelines[i])
+        if currentAlgo == "EDF":
+            self.Timelines, self.missedDeadlines = edf.EDF(self.tasks, self.timelineWidth)
+            self.Timelines = sorted(self.Timelines)
+            
 
-        if (currentAlgo == "EDF") or (currentAlgo == "RM"):
+        # Plotting functions
+        if currentAlgo == "RM":
             self.plot(self.Timelines[0], self.Timelines[1])
+        elif currentAlgo == "EDF":
+            self.plot(self.Timelines, self.missedDeadlines)
         else:
             self.plotCC(self.Timelinesf, self.missedDeadlines)
 
@@ -478,6 +511,10 @@ class MyWidget(QtWidgets.QWidget):
         # Get lists to pass to plot
         for i in range(len(self.tasks)):
             taskSort.append([])
+
+        for i in range(len(Timelines)):
+            print(Timelines[i])
+
 
         # Sort tuples into list by name
         for i in range(len(Timelines)):
@@ -508,6 +545,8 @@ class MyWidget(QtWidgets.QWidget):
             yTickList.append(j + 10*i)
             yTickLabels.append(self.tasks[i].name)
 
+        gnt.invert_yaxis()
+
         gnt.set_yticks(yTickList)
         gnt.set_yticklabels(yTickLabels)
         gnt.grid(False)
@@ -517,7 +556,8 @@ class MyWidget(QtWidgets.QWidget):
         # Print missed deadlines
         self.textBox.insertHtml("<p></p><p><Strong><br><br>Missed deadlines:<br></Strong></p>")
         for i in range(len(missedDeadlines)):
-            self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>")
+            if len(missedDeadlines[i][1]) != 0: 
+                self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>")
 
     def plotCC(self, Timelines, missedDeadlines):
         

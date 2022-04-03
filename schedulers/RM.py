@@ -8,7 +8,11 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
+<<<<<<< HEAD
 from schedulers.helpers.Helpers import released_tasks, deadlines_gen, task_schedulable, cpu_idle, fill_timeline, format_input
+=======
+from schedulers.helpers.Helpers import format_input, released_tasks, deadlines_gen, task_schedulable, cpu_idle, fill_timeline, format_input
+>>>>>>> refs/remotes/origin/main
 
 def schedulability_test(Task_master: PseudoQueue):
     """
@@ -97,6 +101,8 @@ def run_RM(Task_master, max_t):
     Task_master = format_input(Task_master)
 
     tl = Timeline(max_time = max_t)
+
+    Task_master = format_input(Task_master)
 
     schedulability_test(Task_master)
 
