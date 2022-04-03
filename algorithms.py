@@ -37,3 +37,11 @@ def schEDF(tsk):
 # input -> tasks[Task(), ...], time=int, freqs[]
 # output -> Timelines[((name=str, blockstart=int, blockend=int, percentofMaxFreq=float), ...], misseddeadline[(name=str, timemissed=int)]
 
+def RoundRobin(tasks, time):
+
+
+    print()
+
+def FCFS(tasks, time):
+
+    print()

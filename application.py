@@ -1,3 +1,4 @@
+from sqlite3 import Time
 import sys
 import os
 import random
@@ -21,6 +22,8 @@ class MyWidget(QtWidgets.QWidget):
 
         # Class variables
         self.filePath = ""
+        self.timelineWidth = 10
+        self.frequencies = []
 
         # Task data, in two forms as too support algorithm with different inputs[Dict support removed for obvious reasons]
         # self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
@@ -94,35 +97,55 @@ class MyWidget(QtWidgets.QWidget):
         initWidget(self.taskLabel, "taskLabel")
         self.taskLabel.setBuddy(self.taskSpinBox)
 
+        # Spin box for # of Invocations
+        self.invSpinBox = QtWidgets.QSpinBox()
+        self.invSpinBox.setMinimum(1)
+        self.invSpinBox.setMaximum(3)
+        self.invSpinBox.setValue(1)
+
+        # Label widget set as buddy to spinbox
+        self.invLabel = QtWidgets.QLabel("Invocations:")
+        initWidget(self.invLabel, "invLabel")
+        self.invLabel.setBuddy(self.invSpinBox)
+
         # Combo Box containing usable algorithms
         self.algorithmComboBox = QtWidgets.QComboBox()
         initWidget(self.algorithmComboBox, "algorithmComboBox")
         
         # Add algorithms here
-        self.algorithmComboBox.addItems(["RM", "EDF"])
-
-        # Horizontal layout inside of group box
-        tasksLayout = QtWidgets.QHBoxLayout()
-        tasksLayout.addWidget(self.taskLabel)
-        tasksLayout.addWidget(self.taskSpinBox)
-        tasksLayout.addStretch(1)
-        tasksLayout.addWidget(self.algorithmComboBox)
-
-        # Frequency forced input line
-        self.freqLineEdit = QtWidgets.QLineEdit()
-        initWidget(self.freqLineEdit, "freqLineEdit")
-        self.freqLineEdit.setPlaceholderText("0.5, 0.75...")
-        self.freqLineEdit.setText("0.5, 0.75, 1")
+        self.algorithmComboBox.addItems(["RM", "EDF", "ccEDF"])
 
         # Checkbox to check if the frequency is forced or not
         self.frequencyCheckBox = QtWidgets.QCheckBox("Frequency forced?")
         initWidget(self.frequencyCheckBox, "frequencyCheckBox")
         self.frequencyCheckBox.toggled.connect(self.freqForceChecked)
 
+        # Horizontal layout inside of group box
+        tasksLayout = QtWidgets.QHBoxLayout()
+        tasksLayout.addWidget(self.taskLabel)
+        tasksLayout.addWidget(self.taskSpinBox)
+        tasksLayout.addStretch(1)
+        tasksLayout.addWidget(self.invLabel)
+        tasksLayout.addWidget(self.invSpinBox)
+
+        freqLayout = QtWidgets.QHBoxLayout()
+        freqLayout.addWidget(self.frequencyCheckBox)
+        freqLayout.addStretch(1)
+        freqLayout.addWidget(self.algorithmComboBox)
+
+        # Frequency forced input line
+        self.freqLineEdit = QtWidgets.QLineEdit()
+        initWidget(self.freqLineEdit, "freqLineEdit")
+        self.freqLineEdit.setPlaceholderText("0.5, 0.75...")
+        self.freqLineEdit.setText("0.5, 0.75, 1")
+        self.freqLineEdit.editingFinished.connect(self.FreqLineEdited)
+
+
+
         # Final layout with all widhets contained inside the options box
         optionsLayout = QtWidgets.QVBoxLayout(result)
         optionsLayout.addLayout(tasksLayout)
-        optionsLayout.addWidget(self.frequencyCheckBox)
+        optionsLayout.addLayout(freqLayout)
         optionsLayout.addWidget(self.freqLineEdit)
         optionsLayout.addWidget(self.randoButton)
 
@@ -320,6 +343,18 @@ class MyWidget(QtWidgets.QWidget):
         elif column == 2:
             self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
 
+    @QtCore.Slot()
+    def freqLineEdited(self):
+        
+        self.frequencies.clear()
+
+        text = self.freqLineEdit.text()
+
+        textList = text.split(", ")
+
+        for i in range(len(textList)):
+            self.frequencies.append(int(textList[i]))
+
 
     @QtCore.Slot()
     def freqForceChecked(self):
@@ -367,11 +402,7 @@ class MyWidget(QtWidgets.QWidget):
     def generatePlot(self):
 
         # Setup Algorithm and Generate Plot
-
         self.textBox.clear()
-
-        #for i in range(len(self.tasks)):
-        #    print(str(self.tasks[i].name) + ", " + str(self.tasks[i].period) + ", " + str(self.tasks[i].exec_t))
 
         # Temporary dict for tasks
         tasks = dict()
@@ -379,6 +410,9 @@ class MyWidget(QtWidgets.QWidget):
             tasks[(int(self.taskTable.item(i, 1).text()), int(self.taskTable.item(i, 2).text()))] = self.taskTable.item(i, 0).text()
 
         text = ""
+        # Test values
+        schedulability = True
+        s = 0.85
 
         # Schedulability Test on currently selected algorithm
         if self.algorithmComboBox.currentText() == "EDF":
@@ -390,7 +424,12 @@ class MyWidget(QtWidgets.QWidget):
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
         
         if self.algorithmComboBox.currentText() == "RM":
-            print("Nothing here yet...")
+            #schedulability, s = algorithms.schRM(tasks)
+            text = "<p><strong>Schedulability Test: </strong>Sufficient</p><p>Using the formula &Sigma;(Ci/Di) &le; " + str(len(self.tasks) * (2**(1/len(self.tasks)) - 1)) + "</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
+            if schedulability:
+                text += "<p>The task set <strong>is</strong> schedulable</p>"
+            else:
+                text += "<p>The task set <strong>may be</strong> schedulable</p>"
 
         # Other algorithms added here, if time permits
 
@@ -398,42 +437,104 @@ class MyWidget(QtWidgets.QWidget):
         self.textBox.insertHtml(text)
 
         # Generate plot
-        self.Timelines = [("T1", 0, 2), ("T1", 4, 5), ("T1", 8, 10), ("T2", 2, 4), ("T2", 5, 8)]
-        self.plot(self.Timelines)
+        self.Timelines = [("T1", 0, 2), ("T1", 4, 5), ("T1", 8, 10), ("T2", 2, 4), ("T2", 5, 7), ("T3", 7, 8)]
+        self.Timelinesf = [("T1", 0, 3, 0.87), ("T2", 3, 4.5, 0.9), ("T3", 4.5, 7, 0.6)]
+        self.missedDeadlines = [("T1", 2), ("T2", 5)]
 
-        # Placeholder data
+        currentAlgo = self.algorithmComboBox.currentText()
 
-    def plot(self, Timelines):
+        if (currentAlgo == "EDF") or (currentAlgo == "RM"):
+            self.plot(self.Timelines, self.missedDeadlines)
+        else:
+            self.plotCC(self.Timelinesf, self.missedDeadlines)
+
+
+    def plot(self, Timelines, missedDeadlines):
     
         fig, gnt = plt.subplots()
 
+        colors = ["red", "blue", "green"]
 
+        # Sort values into seperate lists
+        # Better task sort based on name
+        taskSort = []
+        j = 0
+        k = 0
+        name = ""
 
+        # Get lists to pass to plot
+        for i in range(len(self.tasks)):
+            taskSort.append([])
 
+        # Sort tuples into list by name
+        for i in range(len(Timelines)):
+            name = Timelines[k][0] 
+            if Timelines[i][0] == name:
+                taskSort[j].append((Timelines[i][1], Timelines[i][2] - Timelines[i][1]))
+            else:
+                j += 1
+                k = i
+                taskSort[j].append((Timelines[i][1], Timelines[i][2] - Timelines[i][1]))
 
+        # Sent info to chart
+        j = 10
+        for i in range(len(taskSort)):
+            gnt.broken_barh(taskSort[i], (j, 9), color=colors[(i + 3) % 3])
+            j += 10
 
-
-
-
-
-
-
-        gnt.set_ylim(0, 45)
-        gnt.set_xlim(0, 10)
-
+        gnt.set_ylim(0, len(self.tasks) * 10 + 25)
+        gnt.set_xlim(0, self.timelineWidth)
 
         gnt.set_xlabel("Time")
         gnt.set_ylabel("Tasks")
 
-        gnt.set_yticks([15, 25])
+        yTickList = []
+        yTickLabels = []
+        j = 15
+        for i in range(len(self.tasks)):
+            yTickList.append(j + 10*i)
+            yTickLabels.append(self.tasks[i].name)
 
-        gnt.set_yticklabels(["T1", "T2"])
+        gnt.set_yticks(yTickList)
+        gnt.set_yticklabels(yTickLabels)
         gnt.grid(False)
 
-        gnt.broken_barh([(0, 2), (4, 1), (8, 2)], (20, 9), color='red')
-        gnt.broken_barh([(2, 2), (5, 3)], (10, 9))
+        plt.show()
+
+        # Print missed deadlines
+        self.textBox.insertHtml("<p></p><p><Strong><br><br>Missed deadlines:<br></Strong></p>")
+        for i in range(len(missedDeadlines)):
+            self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>")
+
+    def plotCC(self, Timelines, missedDeadlines):
+        
+        fig, gnt = plt.subplots()
+
+        colors = ["red", "blue", "green"]
+
+        # Display tasks and frequencies
+        for i in range(len(Timelines)):
+            gnt.broken_barh([(Timelines[i][1], Timelines[i][2] - Timelines[i][1])], (10, 10 * Timelines[i][3]), color=colors[(i + 3) % 3])
+            gnt.annotate(Timelines[i][0] + ": " + str(Timelines[i][3]) + "Fmax", xy=(Timelines[i][1] + (Timelines[i][2] - Timelines[i][1])/2, 10 + 10 * Timelines[i][3]), xytext=(Timelines[i][1] + ((Timelines[i][2] - Timelines[i][1])/2) + 1, 10 + 10 * Timelines[i][3] + 5), arrowprops=dict(facecolor='black', shrink=0.01, width=0.5), fontsize=9)
+
+        gnt.set_ylim(25)
+        gnt.set_xlim(0, self.timelineWidth)
+
+        gnt.set_xlabel("Time")
+        gnt.set_ylabel("Frequency")
+
+        gnt.set_yticks([10, 15, 17.5, 20])
+        gnt.set_yticklabels(["0", "0.5Fmax", "0.75Fmax", "Fmax"])
+        gnt.grid(False)
+
+        gnt.invert_yaxis()
 
         plt.show()
+
+        # Print missed deadlines
+        self.textBox.insertHtml("<p></p><p><Strong><br><br>Missed deadlines:<br></Strong></p>")
+        for i in range(len(missedDeadlines)):
+            self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>") 
 
     """--------------MISC--------------"""
 
