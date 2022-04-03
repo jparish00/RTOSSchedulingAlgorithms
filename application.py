@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 import algorithms
 import taskformats as tf
+import schedulers.RM as rm
+import schedulers.helpers.Helpers as help
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -138,7 +140,7 @@ class MyWidget(QtWidgets.QWidget):
         initWidget(self.freqLineEdit, "freqLineEdit")
         self.freqLineEdit.setPlaceholderText("0.5, 0.75...")
         self.freqLineEdit.setText("0.5, 0.75, 1")
-        self.freqLineEdit.editingFinished.connect(self.FreqLineEdited)
+        self.freqLineEdit.editingFinished.connect(self.freqLineEdited)
 
 
 
@@ -424,8 +426,8 @@ class MyWidget(QtWidgets.QWidget):
                 text += "<p>The task set <strong>is not</strong> schedulable</p>"
         
         if self.algorithmComboBox.currentText() == "RM":
-            #schedulability, s = algorithms.schRM(tasks)
-            text = "<p><strong>Schedulability Test: </strong>Sufficient</p><p>Using the formula &Sigma;(Ci/Di) &le; " + str(len(self.tasks) * (2**(1/len(self.tasks)) - 1)) + "</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
+            schedulability, s, bounds = rm.schedulability_test(help.format_input(self.tasks))
+            text = "<p><strong>Schedulability Test: </strong>Sufficient</p><p>Using the formula &Sigma;(Ci/Di) &le; " + str(bounds) + "</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
             if schedulability:
                 text += "<p>The task set <strong>is</strong> schedulable</p>"
             else:
