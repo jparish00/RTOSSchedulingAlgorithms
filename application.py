@@ -438,12 +438,16 @@ class MyWidget(QtWidgets.QWidget):
         # Display algorithm information
         self.textBox.insertHtml(text)
 
+        currentAlgo = self.algorithmComboBox.currentText()
+
         # Generate plot
         self.Timelines = [("T1", 0, 2), ("T1", 4, 5), ("T1", 8, 10), ("T2", 2, 4), ("T2", 5, 7), ("T3", 7, 8)]
         self.Timelinesf = [("T1", 0, 3, 0.87), ("T2", 3, 4.5, 0.9), ("T3", 4.5, 7, 0.6)]
         self.missedDeadlines = [("T1", 2), ("T2", 5)]
 
-        currentAlgo = self.algorithmComboBox.currentText()
+        if currentAlgo == "RM":
+            tm, tl = rm.run_RM(help.format_input(self.tasks), self.timelineWidth)
+            self.Timelines = rm.output_RM_EDF(tm,tl)
 
         if (currentAlgo == "EDF") or (currentAlgo == "RM"):
             self.plot(self.Timelines, self.missedDeadlines)
