@@ -12,6 +12,7 @@ import schedulers.RM as rm
 import schedulers.helpers.Helpers as help
 import schedulers.helpers.Classes as tf
 import EDF.EDF as edf
+import schedulers.EDF_CC as cc
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -361,6 +362,14 @@ class MyWidget(QtWidgets.QWidget):
             self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
             self.tasks[row].remaining_t = int(self.taskTable.item(row, column).text())
 
+        # Make sure exec time is less than period
+        if self.tasks[row].exec_t >= self.tasks[row].period:
+            self.tasks[row].exec_t = self.tasks[row].period - 1
+            self.taskTable.setItem(row, 2, QtWidgets.QTableWidgetItem(str(self.tasks[row].exec_t)))
+            self.textBox.clear()
+            self.textBox.insertHtml("<p>Execution time <Strong>cannot</Strong> be greater than or equal to the period!</p>")
+
+
     @QtCore.Slot()
     def updateWidth(self):
         self.timelineWidth = self.widthSpinBox.value()
@@ -441,7 +450,7 @@ class MyWidget(QtWidgets.QWidget):
         taskcopy = self.tasks            
 
         # Schedulability Test on currently selected algorithm
-        if self.algorithmComboBox.currentText() == "EDF":
+        if self.algorithmComboBox.currentText() == "EDF" or self.algorithmComboBox.currentText() == "ccEDF":
             schedulability, s = algorithms.schEDF(tasks)
             text = "<p><strong>Schedulability Test: </strong>Exact (Sufficient + Necessary)</p><p>Using the formula &Sigma;(Ci/Di) &le; 1</p><p>&Sigma;(Ci/Di) = " + str(s) + "</p><p>The result of the test is " + str(schedulability) + ", so...</p>"
             if schedulability:
@@ -464,24 +473,27 @@ class MyWidget(QtWidgets.QWidget):
 
         currentAlgo = self.algorithmComboBox.currentText()
 
-        # Generate plot
-        self.Timelinesf = [("T1", 0, 3, 0.87), ("T2", 3, 4.5, 0.9), ("T3", 4.5, 7, 0.6)]
-        self.missedDeadlines = [("T1", 2), ("T2", 5)]
-
         # Algorithm processing
 
         if currentAlgo == "RM":
-
-
             tm, tl = rm.run_RM(taskcopy, self.timelineWidth)
 
             self.Timelines = help.output_RM_EDF(tm,tl)
             self.Timelines[0] = sorted(self.Timelines[0])
 
-        if currentAlgo == "EDF":
+            tl.reset()
+            for task in tm.tasks_list:
+                task.reset()
+        elif currentAlgo == "EDF":
             self.Timelines, self.missedDeadlines = edf.EDF(self.tasks, self.timelineWidth)
             self.Timelines = sorted(self.Timelines)
-            
+        else:
+            if self.frequencyCheckBox.isChecked():
+                tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, self.frequencies)
+            else:
+                tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, [])
+            self.Timelinesf = help.output_EDF_CC(tm, tl)
+            self.Timelines[0] = sorted(self.Timelines[0])
 
         # Plotting functions
         if currentAlgo == "RM":
@@ -489,7 +501,7 @@ class MyWidget(QtWidgets.QWidget):
         elif currentAlgo == "EDF":
             self.plot(self.Timelines, self.missedDeadlines)
         else:
-            self.plotCC(self.Timelinesf, self.missedDeadlines)
+            self.plotCC(self.Timelinesf[0], self.Timelinesf[0])
 
 
     def plot(self, Timelines, missedDeadlines):
@@ -514,7 +526,6 @@ class MyWidget(QtWidgets.QWidget):
 
         for i in range(len(Timelines)):
             print(Timelines[i])
-
 
         # Sort tuples into list by name
         for i in range(len(Timelines)):
@@ -555,8 +566,12 @@ class MyWidget(QtWidgets.QWidget):
 
         # Print missed deadlines
         self.textBox.insertHtml("<p></p><p><Strong><br><br>Missed deadlines:<br></Strong></p>")
-        for i in range(len(missedDeadlines)):
-            if len(missedDeadlines[i][1]) != 0: 
+        if self.algorithmComboBox.currentText() == "RM":
+            for i in range(len(missedDeadlines)):
+                if len(missedDeadlines[i][1]) != 0: 
+                    self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1][0]) + "<br></p>")
+        else:
+            for i in range(len(missedDeadlines)):
                 self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>")
 
     def plotCC(self, Timelines, missedDeadlines):
@@ -587,7 +602,8 @@ class MyWidget(QtWidgets.QWidget):
         # Print missed deadlines
         self.textBox.insertHtml("<p></p><p><Strong><br><br>Missed deadlines:<br></Strong></p>")
         for i in range(len(missedDeadlines)):
-            self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1]) + "<br></p>") 
+            if len(missedDeadlines[i][1]) != 0: 
+                self.textBox.insertHtml("<p>Task " + missedDeadlines[i][0] +  " missed deadline at t = " + str(missedDeadlines[i][1][0]) + "<br></p>")
 
     """--------------MISC--------------"""
 

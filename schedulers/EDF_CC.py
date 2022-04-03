@@ -13,7 +13,7 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 
 from schedulers.EDF import schedulability_test_EDF_WC
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
-from schedulers.helpers.Helpers import priorities, deadlines_gen, task_schedulable, cpu_idle
+from schedulers.helpers.Helpers import format_input, priorities, deadlines_gen, task_schedulable, cpu_idle, format_input
 
 from math import isclose
 
@@ -186,7 +186,9 @@ def run_EDF_CC(Task_master, max_t, av_freqs):
 
     tl = Timeline(av_freqs, max_t)
 
-    schedulability_test_EDF_WC(Task_master)
+    Task_master = format_input(Task_master)
+
+    #schedulability_test_EDF_WC(Task_master)
 
     deadlines_gen(Task_master,tl)
 
