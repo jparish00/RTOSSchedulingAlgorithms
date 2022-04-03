@@ -8,9 +8,9 @@ from PySide6 import QtCore, QtWidgets, QtGui
 import matplotlib.pyplot as plt
 
 import algorithms
-import taskformats as tf
 import schedulers.RM as rm
 import schedulers.helpers.Helpers as help
+import schedulers.helpers.Classes as tf
 
 def initWidget(w, name):
     w.setObjectName(name)
@@ -24,12 +24,12 @@ class MyWidget(QtWidgets.QWidget):
 
         # Class variables
         self.filePath = ""
-        self.timelineWidth = 10
+        self.timelineWidth = 120
         self.frequencies = []
 
         # Task data, in two forms as too support algorithm with different inputs[Dict support removed for obvious reasons]
         # self.defaulttask = { (50,12) : 'T1', (40,10) : 'T2', (30,10) : 'T3' }
-        self.tasks = [tf.Task(1,50,12), tf.Task(2, 40, 10), tf.Task(3, 30, 10)]
+        self.tasks = [tf.Task(1,5,2, []), tf.Task(2, 6, 1, []), tf.Task(3, 7, 3, [])]
 
         # Menu bar setup
         self.menubar = self.createMenuBar()
@@ -235,7 +235,7 @@ class MyWidget(QtWidgets.QWidget):
 
         # Sort into class list and dict[Support for dict removed]
         for i in range(len(data)):
-            self.tasks.append(tf.Task(i + 1, data.iloc[i,1], data.iloc[i,2]))
+            self.tasks.append(tf.Task(i + 1, data.iloc[i,1], data.iloc[i,2], []))
             self.taskTable.setItem(i, 0, QtWidgets.QTableWidgetItem("T" + str(i + 1)))
             self.taskTable.setItem(i, 1, QtWidgets.QTableWidgetItem(str(data.iloc[i, 1])))
             self.taskTable.setItem(i, 2, QtWidgets.QTableWidgetItem(str(data.iloc[i, 2])))
@@ -336,7 +336,7 @@ class MyWidget(QtWidgets.QWidget):
         # When the taskNumber changes, tableEdited() will run BEFORE taskNumberChanged()
         # add task until matching rowcount
         if self.taskTable.rowCount() - 1 > len(self.tasks) - 1:
-            self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5)))
+            self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [])))
             #print("Task added")
 
         if column == 1:
@@ -447,10 +447,14 @@ class MyWidget(QtWidgets.QWidget):
 
         if currentAlgo == "RM":
             tm, tl = rm.run_RM(help.format_input(self.tasks), self.timelineWidth)
-            self.Timelines = rm.output_RM_EDF(tm,tl)
+            self.Timelines = help.output_RM_EDF(tm,tl)
+            self.Timelines[0] = sorted(self.Timelines[0])
+
+            for i in range(len(self.Timelines)):
+                print(self.Timelines[i])
 
         if (currentAlgo == "EDF") or (currentAlgo == "RM"):
-            self.plot(self.Timelines, self.missedDeadlines)
+            self.plot(self.Timelines[0], self.Timelines[1])
         else:
             self.plotCC(self.Timelinesf, self.missedDeadlines)
 
@@ -458,6 +462,9 @@ class MyWidget(QtWidgets.QWidget):
     def plot(self, Timelines, missedDeadlines):
     
         fig, gnt = plt.subplots()
+
+        for i in range(len(Timelines)):
+            print(Timelines[i])
 
         colors = ["red", "blue", "green"]
 
