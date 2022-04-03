@@ -8,7 +8,7 @@ UBC-O ENGR 467 2021W - RT Embedded Systems
 """
 
 from schedulers.helpers.Classes import Task, Timeline, PseudoQueue
-from schedulers.helpers.Helpers import released_tasks, deadlines_gen, task_schedulable, cpu_idle, fill_timeline
+from schedulers.helpers.Helpers import released_tasks, deadlines_gen, task_schedulable, cpu_idle, fill_timeline, format_input
 
 def schedulability_test(Task_master: PseudoQueue):
     """
@@ -94,6 +94,7 @@ def run_RM(Task_master, max_t):
     Output: Dictionary, key: tasks, values: tupple with start and end times
 
     '''
+    Task_master = format_input(Task_master)
 
     tl = Timeline(max_time = max_t)
 
@@ -103,7 +104,13 @@ def run_RM(Task_master, max_t):
 
     timeline_completion(Task_master,tl)
 
-    return Task_master, tl
+    Task_final = Task_master
+    tl_final = tl
+    tl.reset()
+    for task in Task_master.tasks_list:
+        task.reset()
+
+    return Task_final, tl_final
             
 
 

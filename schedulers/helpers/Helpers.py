@@ -26,8 +26,11 @@ def dummy_input_vars():
     t1_ac = [1,1]
     t2_ac = [1,1]
     t3_ac = [2,1]
+    t1_ac = []
+    t2_ac = []
+    t3_ac = []
     
-    Task_master_dummy = [Task(1,6,2,t1_ac), Task(2,8,3,t2_ac), Task(3,12,3,t3_ac)]
+    Task_master_dummy = [Task(1,4,1,t1_ac), Task(2,5,2,t2_ac), Task(3,7,2,t3_ac)]
 
     return Task_master_dummy
 

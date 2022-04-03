@@ -49,6 +49,19 @@ class Task:
 
         self.cpu_freqs = []
 
+    def reset(self):
+        self.remaining_t = self.exec_t
+        self.released = True
+        self.finished = False
+        self.schedulable = True
+        self.missed_deadlines = ['ignore']
+        self.cnt_o = 0
+        self.cpu_freqs = []
+        self.start = []
+        self.end = []
+        self.priority = 0 
+        self.d_it = 0               #deadline iterator
+        self.deadlines = []
 
 class Timeline:
     max_time = 18 
@@ -66,3 +79,10 @@ class Timeline:
         self.new_release = False
 
         self.available_frequencies = available_frequencies
+
+    def reset(self):
+        self.time = []
+        self.cpu_task_usage = []
+        self.c_time = 0
+        self.new_release = False
+        

@@ -191,12 +191,7 @@ def run_EDF_CC(Task_master, max_t, av_freqs):
     deadlines_gen(Task_master,tl)
 
     timeline_completion_EDF_CV(Task_master,tl)
-
-    # for task in Task_master.tasks_list:
-    #     print(task.name)
-    #     print('S:', task.start)
-    #     print('F:', task.end)
-    #     print('Missed deadlines:', task.missed_deadlines[1:])
+    
     return Task_master, tl
             
             
