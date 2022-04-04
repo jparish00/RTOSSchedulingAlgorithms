@@ -27,10 +27,11 @@ class MyWidget(QtWidgets.QWidget):
         # Class variables
         self.filePath = ""
         self.timelineWidth = 15
-        self.frequencies = []
+        self.frequencies = [0.5, 0.75, 1]
+        self.invValue = 1
 
         # Task data, in two forms as too support algorithm with different inputs[Dict support removed for obvious reasons]
-        self.tasks = [tf.Task(1,4,1, []), tf.Task(2, 5, 2, []), tf.Task(3, 7, 2, [])]
+        self.tasks = [tf.Task(1,4,1, [1]), tf.Task(2, 5, 2, [2]), tf.Task(3, 7, 2, [1])]
 
         # Menu bar setup
         self.menubar = self.createMenuBar()
@@ -102,9 +103,10 @@ class MyWidget(QtWidgets.QWidget):
 
         # Spin box for # of Invocations
         self.invSpinBox = QtWidgets.QSpinBox()
-        self.invSpinBox.setMinimum(1)
-        self.invSpinBox.setMaximum(3)
+        self.invSpinBox.setMinimum(0)
+        self.invSpinBox.setMaximum(2)
         self.invSpinBox.setValue(1)
+        self.invSpinBox.valueChanged.connect(self.invChanged)
 
         # Label widget set as buddy to spinbox
         self.invLabel = QtWidgets.QLabel("Invocations:")
@@ -177,14 +179,15 @@ class MyWidget(QtWidgets.QWidget):
 
         # For default tasks
         result.setRowCount(3)
-        result.setColumnCount(3)
-        result.setHorizontalHeaderLabels(["Task", "Period", "Execution"])
+        result.setColumnCount(4)
+        result.setHorizontalHeaderLabels(["Task", "Period", "Execution", "AC1"])
 
         # Load default data
         for i in range(len(self.tasks)):
             result.setItem(i, 0, QtWidgets.QTableWidgetItem(self.tasks[i].name))
             result.setItem(i, 1, QtWidgets.QTableWidgetItem(str(self.tasks[i].period)))
             result.setItem(i, 2, QtWidgets.QTableWidgetItem(str(self.tasks[i].exec_t)))
+            result.setItem(i, 3, QtWidgets.QTableWidgetItem(str(self.tasks[i].invocations[0])))
 
         # Connect to data updater
         result.itemChanged.connect(self.tableEdited)
@@ -352,7 +355,12 @@ class MyWidget(QtWidgets.QWidget):
         # When the taskNumber changes, tableEdited() will run BEFORE taskNumberChanged()
         # add task until matching rowcount
         if self.taskTable.rowCount() - 1 > len(self.tasks) - 1:
-            self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [])))
+            if self.invValue == 0:
+                self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [])))
+            elif self.invValue == 1:
+                self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [2])))
+            elif self.invValue == 2:
+                self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [2, 2])))
             #print("Task added")
 
         if column == 1:
@@ -361,6 +369,11 @@ class MyWidget(QtWidgets.QWidget):
         elif column == 2:
             self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
             self.tasks[row].remaining_t = int(self.taskTable.item(row, column).text())
+        elif column == 3:
+            self.tasks[row].invocations[0] = int(self.taskTable.item(row, column).text())
+        elif column == 4:
+            self.tasks[row].invocations[1] = int(self.taskTable.item(row, column).text())
+
 
         # Make sure exec time is less than period
         if self.tasks[row].exec_t >= self.tasks[row].period:
@@ -386,7 +399,7 @@ class MyWidget(QtWidgets.QWidget):
         textList = text.split(", ")
 
         for i in range(len(textList)):
-            self.frequencies.append(int(textList[i]))
+            self.frequencies.append(float(textList[i]))
 
 
     @QtCore.Slot()
@@ -412,12 +425,48 @@ class MyWidget(QtWidgets.QWidget):
                 self.taskTable.setItem(rowNum - 1, 0, QtWidgets.QTableWidgetItem("T" + str(rowNum)))
                 self.taskTable.setItem(rowNum - 1, 1, QtWidgets.QTableWidgetItem(str(10)))
                 self.taskTable.setItem(rowNum - 1, 2, QtWidgets.QTableWidgetItem(str(5)))
+                if self.invValue >= 1:
+                    self.taskTable.setItem(rowNum - 1, 3, QtWidgets.QTableWidgetItem(str(2)))
+                if self.invValue == 2:
+                    self.taskTable.setItem(rowNum - 1, 4, QtWidgets.QTableWidgetItem(str(2)))
         else:
             r = self.taskTable.rowCount() - self.taskSpinBox.value()
             self.taskTable.setRowCount(self.taskTable.rowCount() - r)
             for i in range (r):
                 # self.tasks tasks are added in tableEdited(), and removed here (because of porder of functions)
                 self.tasks.pop()
+
+    @QtCore.Slot()
+    def invChanged(self):
+        if self.invSpinBox.value() < self.invValue:
+            for i in self.tasks:
+                i.invocations.pop()
+                if (self.invValue - self.invSpinBox.value()) == 2:
+                    i.invocations.pop()
+            self.taskTable.setColumnCount(self.taskTable.columnCount() - (self.invValue - self.invSpinBox.value()))
+
+        # Change this if you ever add the ability for more invocations
+        elif self.invValue < self.invSpinBox.value():
+            self.taskTable.setColumnCount(self.taskTable.columnCount() + (self.invSpinBox.value() - self.invValue))
+            for i in self.tasks:
+                for j in range(self.invSpinBox.value() - self.invValue):
+                    i.invocations.append(2)
+                if (self.invSpinBox.value() - self.invValue) == 2:
+                    self.taskTable.setItem(self.tasks.index(i), 3, QtWidgets.QTableWidgetItem(str(2)))
+                    self.taskTable.setItem(self.tasks.index(i), 4, QtWidgets.QTableWidgetItem(str(2)))
+                elif self.invSpinBox.value() == 1:
+                    self.taskTable.setItem(self.tasks.index(i), 3, QtWidgets.QTableWidgetItem(str(2)))
+                else:
+                    self.taskTable.setItem(self.tasks.index(i), 4, QtWidgets.QTableWidgetItem(str(2)))
+
+
+
+            self.taskTable.setHorizontalHeaderLabels(["Task", "Period", "Execution", "AC1",  "AC2"])
+
+        for i in self.tasks:
+            print(i.invocations)
+
+        self.invValue = self.invSpinBox.value()
 
 
     @QtCore.Slot()
@@ -443,9 +492,6 @@ class MyWidget(QtWidgets.QWidget):
             tasks[(int(self.taskTable.item(i, 1).text()), int(self.taskTable.item(i, 2).text()))] = self.taskTable.item(i, 0).text()
 
         text = ""
-        # Test values
-        schedulability = True
-        s = 0.85
 
         taskcopy = self.tasks            
 
@@ -484,16 +530,20 @@ class MyWidget(QtWidgets.QWidget):
             tl.reset()
             for task in tm.tasks_list:
                 task.reset()
+
         elif currentAlgo == "EDF":
             self.Timelines, self.missedDeadlines = edf.EDF(self.tasks, self.timelineWidth)
             self.Timelines = sorted(self.Timelines)
+
         else:
             if self.frequencyCheckBox.isChecked():
+                for i in self.frequencies:
+                    print(i)
                 tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, self.frequencies)
             else:
                 tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, [])
             self.Timelinesf = help.output_EDF_CC(tm, tl)
-            self.Timelines[0] = sorted(self.Timelines[0])
+            self.Timelinesf[0] = sorted(self.Timelinesf[0])
 
         # Plotting functions
         if currentAlgo == "RM":
@@ -501,7 +551,7 @@ class MyWidget(QtWidgets.QWidget):
         elif currentAlgo == "EDF":
             self.plot(self.Timelines, self.missedDeadlines)
         else:
-            self.plotCC(self.Timelinesf[0], self.Timelinesf[0])
+            self.plotCC(self.Timelinesf[0], self.Timelinesf[1])
 
 
     def plot(self, Timelines, missedDeadlines):
@@ -583,7 +633,7 @@ class MyWidget(QtWidgets.QWidget):
         # Display tasks and frequencies
         for i in range(len(Timelines)):
             gnt.broken_barh([(Timelines[i][1], Timelines[i][2] - Timelines[i][1])], (10, 10 * Timelines[i][3]), color=colors[(i + 3) % 3])
-            gnt.annotate(Timelines[i][0] + ": " + str(Timelines[i][3]) + "Fmax", xy=(Timelines[i][1] + (Timelines[i][2] - Timelines[i][1])/2, 10 + 10 * Timelines[i][3]), xytext=(Timelines[i][1] + ((Timelines[i][2] - Timelines[i][1])/2) + 1, 10 + 10 * Timelines[i][3] + 5), arrowprops=dict(facecolor='black', shrink=0.01, width=0.5), fontsize=9)
+            gnt.annotate(Timelines[i][0] + ": " + str(Timelines[i][3]), xy=(Timelines[i][1] + (Timelines[i][2] - Timelines[i][1])/2, 10 + 10 * Timelines[i][3]), xytext=(Timelines[i][1] + ((Timelines[i][2] - Timelines[i][1])/2) + 1, 10 + 10 * Timelines[i][3] + 5), arrowprops=dict(facecolor='black', shrink=0.01, width=0.5), fontsize=9)
 
         gnt.set_ylim(25)
         gnt.set_xlim(0, self.timelineWidth)
@@ -619,18 +669,3 @@ class MyWidget(QtWidgets.QWidget):
         if (self.filePath != ""):
             head, tail = os.path.split(self.filePath)
             self.setWindowTitle(" RTOS Scheduling Algorithm Playground - " + tail)
-
-
-        
-
-
-
-
-
-
-        
-        
-
-
-
-
