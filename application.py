@@ -1,7 +1,13 @@
+"""
+UI application incorporating scheduling algorithms
+
+Jarod Parish
+4/4/22
+UBC-O ENGR 467 2021W2 - RTOS Embedded Systems
+"""
+
 from sqlite3 import Time
-import sys
 import os
-import random
 import numpy as np
 import pandas as pd
 from PySide6 import QtCore, QtWidgets, QtGui
@@ -19,14 +25,20 @@ def initWidget(w, name):
 
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
+        
+        """
+        This function initializes all the default variables and tasks, 
+        and sets the final layout of widgets.
+        """
+
         super().__init__()
 
         mainWindow = QtWidgets.QMainWindow()
         self.setWindowTitle("RTOS Scheduling Algorithm Playground")
 
-        # Class variables
+        # Class variables (defaults)
         self.filePath = ""
-        self.timelineWidth = 15
+        self.timelineWidth = 24
         self.frequencies = [0.5, 0.75, 1]
         self.invValue = 1
 
@@ -59,6 +71,12 @@ class MyWidget(QtWidgets.QWidget):
     
     def createMenuBar(self):
 
+        """
+        createMenuBar() adds the menu bar to the widget, such that
+        the file menu can be used. It also adds each signal to its
+        specified slot.
+        """
+
         # Setup for Open, Save functionality
         menubar = QtWidgets.QMenuBar(self)
         fileMenu = QtWidgets.QMenu("&File", self)
@@ -76,6 +94,13 @@ class MyWidget(QtWidgets.QWidget):
         return menubar
 
     def createOptionsBox(self):
+
+        """
+        createOptionsBox() creates all the necessary widgets,
+        like push buttons, sets their values and functionality,
+        and connects their respective signals to corresponding
+        slots.
+        """
 
         # Group box to contain all options
         result = QtWidgets.QGroupBox("Options")
@@ -160,9 +185,7 @@ class MyWidget(QtWidgets.QWidget):
         self.freqLineEdit.setText("0.5, 0.75, 1")
         self.freqLineEdit.editingFinished.connect(self.freqLineEdited)
 
-
-
-        # Final layout with all widhets contained inside the options box
+        # Final layout with all widgets contained inside the options box
         optionsLayout = QtWidgets.QVBoxLayout(result)
         optionsLayout.addLayout(tasksLayout)
         optionsLayout.addLayout(freqLayout)
@@ -172,6 +195,13 @@ class MyWidget(QtWidgets.QWidget):
         return result
 
     def createTable(self):
+
+        """
+        createTable() create a table widgets, adds the default
+        rows and columns, loads the default data, sets the 
+        headers, and connects the taskEdited signal to the
+        corresponding slot.
+        """
 
         # Setup for task table, containing all current data
         result = QtWidgets.QTableWidget()
@@ -196,6 +226,10 @@ class MyWidget(QtWidgets.QWidget):
 
     def createTextBox(self):
 
+        """
+        createTextBox() creates a text box widget.
+        """
+
         # Text box for basic html output
         result = QtWidgets.QTextBrowser()
         initWidget(result, "textBox")
@@ -203,6 +237,12 @@ class MyWidget(QtWidgets.QWidget):
         return result
 
     def createGenerateButton(self):
+
+        """
+        createGenerateButton() adds the group box and
+        button widgets to the layout, and adds the signal to 
+        its corresponding slot.
+        """
 
         # Generate button setup to deploy second window with timeline graph, and to display task set information
         result = QtWidgets.QGroupBox()
@@ -229,6 +269,11 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def openFileExplorer(self):
+
+        """
+        This function opens a file dialog, and if applicable
+        loads the file into the table and stores the data.
+        """
 
         # Open the file explorer, then save the filepath to self
         self.filePath = self.openFile()
@@ -266,6 +311,11 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def saveAsFileExplorer(self):
+
+        """
+        This function saves the task table data to one of 
+        three formats, .txt(tab), .csv, .xlsx.
+        """
 
         # Clear to display save fail or success
         self.textBox.clear()
@@ -305,6 +355,12 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def saveFileSlot(self):
 
+        """
+        This function does the same as the function above,
+        saveAsFileExplorer(), however it assumes that the file we are 
+        saving to is currently open, so there is no need for a file dialog.
+        """
+
         # Clear to display save fail or success
         self.textBox.clear()
 
@@ -336,6 +392,12 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def randomClicked(self):
         
+        """
+        This function randomizes the values in the table,
+        as well as the stored values when the 'Randomize'
+        button is clicked.
+        """
+
         # Refill table with a set of random values(this will trigger tableEdited() by signal)
         # Period is set from a range of 25-50, and exec_t is set to a range of 1-25
         for i in range(self.taskTable.rowCount()):
@@ -345,8 +407,15 @@ class MyWidget(QtWidgets.QWidget):
                 self.taskTable.setItem(i, 2, QtWidgets.QTableWidgetItem(str(np.random.randint(0, 25))))
         
     # TODO: Add exec_t > period check
+
+
     @QtCore.Slot()
     def tableEdited(self, item):
+
+        """
+        This function updates the corresponding stored value when
+        a value(s) in the table change.
+        """
 
         #Find the item that was changed, this will run for every item like a queue
         row = item.row()
@@ -361,7 +430,6 @@ class MyWidget(QtWidgets.QWidget):
                 self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [2])))
             elif self.invValue == 2:
                 self.tasks.append((tf.Task(len(self.tasks) + 1, 10, 5, [2, 2])))
-            #print("Task added")
 
         if column == 1:
             self.tasks[row].period = int(self.taskTable.item(row, column).text())
@@ -374,7 +442,6 @@ class MyWidget(QtWidgets.QWidget):
         elif column == 4:
             self.tasks[row].invocations[1] = int(self.taskTable.item(row, column).text())
 
-
         # Make sure exec time is less than period
         if self.tasks[row].exec_t >= self.tasks[row].period:
             self.tasks[row].exec_t = self.tasks[row].period - 1
@@ -385,13 +452,22 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def updateWidth(self):
+
+        """
+        This function updates the timeline width.
+        """
+
         self.timelineWidth = self.widthSpinBox.value()
-        print(self.timelineWidth)
 
 
     @QtCore.Slot()
     def freqLineEdited(self):
         
+        """
+        This function runs whenever the text for the frequencies
+        input is changed, and stores the values found as a list.
+        """
+
         self.frequencies.clear()
 
         text = self.freqLineEdit.text()
@@ -405,6 +481,11 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def freqForceChecked(self):
 
+        """
+        This function blocks the input of the user for the
+        frequencies whenver the frequency forced checkbox is checked.
+        """
+
         # Don't let the user edit the line if the frequency forced checkbox isn't checked
         if self.frequencyCheckBox.isChecked():
             self.freqLineEdit.setReadOnly(False)
@@ -414,6 +495,12 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def taskNumberChanged(self):
+
+        """
+        This function appends or removes tasks from the
+        task table and stored tasks whenever the number
+        of tasks is changed.
+        """
 
         # Change according to difference (Currently deafults to period = 10, exec_t = 5)
         # TODO: Add randomization?
@@ -438,6 +525,13 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def invChanged(self):
+
+        """
+        This function is the same as above, however is appends
+        or pops the invocations from the task table and the 
+        stored tasks.
+        """
+
         if self.invSpinBox.value() < self.invValue:
             for i in self.tasks:
                 i.invocations.pop()
@@ -472,28 +566,45 @@ class MyWidget(QtWidgets.QWidget):
     @QtCore.Slot()
     def algorithmInfo(self):
 
+        """
+        This function prints the information on the currently
+        selected algorithm to the text box, whenever the 
+        'Info' button is pressed.
+        """
+
         # Print the info on the currently selected algorithm
         self.textBox.clear()
         if self.algorithmComboBox.currentText() == "RM":
             self.textBox.insertHtml("<p><strong>Rate-Monotonic Algorithm:</strong></p><p>The rate utilizes a static priority policy to determine which tasks are executed at a given time. This policy gives each task a priority based on the length of the period. So, longer periods are given less priority than shorter ones. This scheduling algorithm is preemptive, meaning that at any point a higher priority task than the current one executing becomes available, the higher priority task will start to execute.</p>")
 
-        if self.algorithmComboBox.currentText() == "EDF":
+        elif self.algorithmComboBox.currentText() == "EDF":
             self.textBox.insertHtml("<p><strong>Earliest Deadline First Algorithm:</strong></p><p>As the name suggests, the Earliest Deadline First (EDF) algorithm will always give priority to the task with the closest deadline. Like Rate Monotonic, EDF is a preemptive algorithm, such that if a higher priority task becomes available while a lower priority task is running, the higher priority task will start to execute.</p>")
+
+        else:
+            self.textBox.insertHtml("<p><strong>Cyclic Conserving EDF:</strong></p><p>The cyclic conserving EDF, like regular EDF, gives priority to the next available deadline. The difference is that the cyclic conserving EDF expects a worst case time, and calculates the frequency of the task based on that. Once the task is finished, if the task took less time then expected, the next available task will reduce its frequency to fill the gaps. The goal of the Cyclic Conserving EDF algorithm is to save energy by reducing the frequency of tasks whenever possible.<br /></p>")
 
     @QtCore.Slot()
     def generatePlot(self):
 
+        """
+        This function sets up the data, runs scheduability tests,
+        and passes the data to be plotted, depending on the currently
+        selected algorithm.
+        """
+
         # Setup Algorithm and Generate Plot
+
+        # Clear textbox
         self.textBox.clear()
 
-        # Temporary dict for tasks
+        # Temporary dict for tasks, since the EDF scheduability test uses a dicts
         tasks = dict()
         for i in range(self.taskTable.rowCount()):
             tasks[(int(self.taskTable.item(i, 1).text()), int(self.taskTable.item(i, 2).text()))] = self.taskTable.item(i, 0).text()
 
         text = ""
-
         taskcopy = self.tasks            
+
 
         # Schedulability Test on currently selected algorithm
         if self.algorithmComboBox.currentText() == "EDF" or self.algorithmComboBox.currentText() == "ccEDF":
@@ -545,6 +656,10 @@ class MyWidget(QtWidgets.QWidget):
             self.Timelinesf = help.output_EDF_CC(tm, tl)
             self.Timelinesf[0] = sorted(self.Timelinesf[0])
 
+            tl.reset()
+            for task in tm.tasks_list:
+                task.reset()
+
         # Plotting functions
         if currentAlgo == "RM":
             self.plot(self.Timelines[0], self.Timelines[1])
@@ -556,10 +671,12 @@ class MyWidget(QtWidgets.QWidget):
 
     def plot(self, Timelines, missedDeadlines):
     
-        fig, gnt = plt.subplots()
+        """
+        This function plots the timelines that seperates the tasks,
+        and adds charting information.
+        """
 
-        for i in range(len(Timelines)):
-            print(Timelines[i])
+        fig, gnt = plt.subplots()
 
         colors = ["red", "blue", "green"]
 
@@ -574,9 +691,6 @@ class MyWidget(QtWidgets.QWidget):
         for i in range(len(self.tasks)):
             taskSort.append([])
 
-        for i in range(len(Timelines)):
-            print(Timelines[i])
-
         # Sort tuples into list by name
         for i in range(len(Timelines)):
             name = Timelines[k][0] 
@@ -587,7 +701,7 @@ class MyWidget(QtWidgets.QWidget):
                 k = i
                 taskSort[j].append((Timelines[i][1], Timelines[i][2] - Timelines[i][1]))
 
-        # Sent info to chart
+        # Send info to chart
         j = 10
         for i in range(len(taskSort)):
             gnt.broken_barh(taskSort[i], (j, 9), color=colors[(i + 3) % 3])
@@ -626,6 +740,11 @@ class MyWidget(QtWidgets.QWidget):
 
     def plotCC(self, Timelines, missedDeadlines):
         
+        """
+        This function plots functions that use a single timeline
+        to plot all functions.
+        """
+
         fig, gnt = plt.subplots()
 
         colors = ["red", "blue", "green"]
