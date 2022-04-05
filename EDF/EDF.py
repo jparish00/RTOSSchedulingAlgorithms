@@ -1,5 +1,5 @@
 # Task with the Earliest deadline is given High priority
-# If two or more tasks have same deadline, then task with least period will be given higher priority
+# If two or more tasks have same deadline, then task which was released first will be given higher priority
 # Domino Effect has been neglected and it is assumed that all tasks are having hard deadline and incase they miss a deadline,
 # they are removed immediately
 # Dummy Tasks
