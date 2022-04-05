@@ -38,14 +38,15 @@ def utilization_EDF_CV(Task_master: PseudoQueue, tl: Timeline):
 
 
 def cpu_freq(utilization, tl: Timeline):
+    tl.available_frequencies = sorted(tl.available_frequencies)
     if len(tl.available_frequencies) == 0:
         return utilization
     else:
         i=0
         pFm=0
         for freq in tl.available_frequencies:
-            if (freq - utilization) <= 0:
-                pFm = tl.available_frequencies[i]
+            if (utilization - freq) <= 0:
+                pFm = tl.available_frequencies[i - 1]
                 break
             i+=1
         if pFm == 0:

@@ -435,12 +435,12 @@ class MyWidget(QtWidgets.QWidget):
             self.tasks[row].period = int(self.taskTable.item(row, column).text())
 
         elif column == 2:
-            self.tasks[row].exec_t = int(self.taskTable.item(row, column).text())
-            self.tasks[row].remaining_t = int(self.taskTable.item(row, column).text())
+            self.tasks[row].exec_t = float(self.taskTable.item(row, column).text())
+            self.tasks[row].remaining_t = float(self.taskTable.item(row, column).text())
         elif column == 3:
-            self.tasks[row].invocations[0] = int(self.taskTable.item(row, column).text())
+            self.tasks[row].invocations[0] = float(self.taskTable.item(row, column).text())
         elif column == 4:
-            self.tasks[row].invocations[1] = int(self.taskTable.item(row, column).text())
+            self.tasks[row].invocations[1] = float(self.taskTable.item(row, column).text())
 
         # Make sure exec time is less than period
         if self.tasks[row].exec_t >= self.tasks[row].period:
@@ -448,6 +448,14 @@ class MyWidget(QtWidgets.QWidget):
             self.taskTable.setItem(row, 2, QtWidgets.QTableWidgetItem(str(self.tasks[row].exec_t)))
             self.textBox.clear()
             self.textBox.insertHtml("<p>Execution time <Strong>cannot</Strong> be greater than or equal to the period!</p>")
+        
+        for i in range(len(self.tasks[row].invocations)):
+            if self.tasks[row].invocations[i] > self.tasks[row].exec_t:
+                self.tasks[row].invocations[i] = self.tasks[row].exec_t
+                self.taskTable.setItem(row, 3 + i, QtWidgets.QTableWidgetItem(str(self.tasks[row].invocations[i])))
+                self.textBox.clear()
+                self.textBox.insertHtml("<p>Invocation time <Strong>cannot</Strong> be greater than or equal to the execution time!</p>")
+
 
 
     @QtCore.Slot()
@@ -703,9 +711,21 @@ class MyWidget(QtWidgets.QWidget):
 
         # Send info to chart
         j = 10
+        k = 0
         for i in range(len(taskSort)):
             gnt.broken_barh(taskSort[i], (j, 9), color=colors[(i + 3) % 3])
+
+            k = self.tasks[i].period
+            releaseArrowCount = self.timelineWidth / self.tasks[i].period
+            print(releaseArrowCount)
+            for l in range(int(releaseArrowCount)):
+                gnt.arrow(k, j + 10, 0, -10, head_width = 0.2 *(self.timelineWidth/24), head_length = 2.5)
+                gnt.arrow(k, j, 0, 10, head_width = 0.2 *(self.timelineWidth/24), head_length = 2.5)  
+                k += self.tasks[i].period
+            gnt.arrow(0, j + 10, 0, -10, head_width = 0.2 *(self.timelineWidth/24), head_length = 2.5)
+
             j += 10
+            k = 0
 
         gnt.set_ylim(0, len(self.tasks) * 10 + 25)
         gnt.set_xlim(0, self.timelineWidth)
@@ -752,7 +772,7 @@ class MyWidget(QtWidgets.QWidget):
         # Display tasks and frequencies
         for i in range(len(Timelines)):
             gnt.broken_barh([(Timelines[i][1], Timelines[i][2] - Timelines[i][1])], (10, 10 * Timelines[i][3]), color=colors[(i + 3) % 3])
-            gnt.annotate(Timelines[i][0] + ": " + str(Timelines[i][3]), xy=(Timelines[i][1] + (Timelines[i][2] - Timelines[i][1])/2, 10 + 10 * Timelines[i][3]), xytext=(Timelines[i][1] + ((Timelines[i][2] - Timelines[i][1])/2) + 1, 10 + 10 * Timelines[i][3] + 5), arrowprops=dict(facecolor='black', shrink=0.01, width=0.5), fontsize=9)
+            gnt.annotate(Timelines[i][0] + ": " + str(Timelines[i][3]), xy=(Timelines[i][1] + (Timelines[i][2] - Timelines[i][1])/2, 10 + 10 * Timelines[i][3]), xytext=(Timelines[i][1] + ((Timelines[i][2] - Timelines[i][1])/2) + 1, 10 + 10 * Timelines[i][3] + 3), arrowprops=dict(facecolor='black', shrink=0.01, width=0.5), fontsize=9)
 
         gnt.set_ylim(25)
         gnt.set_xlim(0, self.timelineWidth)

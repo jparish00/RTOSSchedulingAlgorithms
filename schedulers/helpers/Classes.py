@@ -62,6 +62,8 @@ class Task:
         self.priority = 0 
         self.d_it = 0               #deadline iterator
         self.deadlines = []
+        self.released_ts = ['ignore']
+
 
 class Timeline:
     max_time = 18 
