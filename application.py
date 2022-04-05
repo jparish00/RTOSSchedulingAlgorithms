@@ -565,9 +565,6 @@ class MyWidget(QtWidgets.QWidget):
 
             self.taskTable.setHorizontalHeaderLabels(["Task", "Period", "Execution", "AC1",  "AC2"])
 
-        for i in self.tasks:
-            print(i.invocations)
-
         self.invValue = self.invSpinBox.value()
 
 
@@ -656,8 +653,6 @@ class MyWidget(QtWidgets.QWidget):
 
         else:
             if self.frequencyCheckBox.isChecked():
-                for i in self.frequencies:
-                    print(i)
                 tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, self.frequencies)
             else:
                 tm, tl = cc.run_EDF_CC(taskcopy, self.timelineWidth, [])
@@ -717,7 +712,6 @@ class MyWidget(QtWidgets.QWidget):
 
             k = self.tasks[i].period
             releaseArrowCount = self.timelineWidth / self.tasks[i].period
-            print(releaseArrowCount)
             for l in range(int(releaseArrowCount)):
                 gnt.arrow(k, j + 10, 0, -10, head_width = 0.2 *(self.timelineWidth/24), head_length = 2.5)
                 gnt.arrow(k, j, 0, 10, head_width = 0.2 *(self.timelineWidth/24), head_length = 2.5)  
