@@ -5,4 +5,5 @@ plotly
 numpy
 pandas
 datetime
+matplotlib
 sqlite3
